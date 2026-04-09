@@ -1,10 +1,7 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
-# All rights reserved.
-#
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers
 # SPDX-License-Identifier: BSD-3-Clause
 
 import math
-
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
@@ -16,165 +13,145 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
+from isaaclab.actuators import ImplicitActuatorCfg
 
-from . import mdp
-
-##
-# Pre-defined configs
-##
-
-from isaaclab_assets.robots.cartpole import CARTPOLE_CFG  # isort:skip
-
+import isaaclab.envs.mdp as mdp
 
 ##
-# Scene definition
+# 1. 我们的双轮腿机器人底层配置
 ##
+def get_wheel_leg_robot_cfg() -> ArticulationCfg:
+    # 1. 大腿(Hip)：驱动关节，强 PD 控制
+    hip_actuator = ImplicitActuatorCfg(
+        joint_names_expr=[".*hip.*"],  # 🚨 只控 hip！
+        stiffness=20.0, damping=0.5, effort_limit=5.0, velocity_limit=10.0,
+    )
+    # 2. 膝盖(Knee)：被动关节，0刚度，只给极小的阻尼防止乱晃
+    knee_actuator = ImplicitActuatorCfg(
+        joint_names_expr=[".*knee.*"], # 🚨 剥离出来
+        stiffness=0.0, damping=1.0, effort_limit=0.0, velocity_limit=20.0,
+    )
+    # 3. 车轮(Wheel)：驱动关节，力矩控制
+    wheel_actuator = ImplicitActuatorCfg(
+        joint_names_expr=[".*ankle.*"], 
+        stiffness=0.0, damping=0.5, effort_limit=10.0, velocity_limit=30.0,
+    )
+    
+    return ArticulationCfg(
+        spawn=sim_utils.UsdFileCfg(
+            usd_path="/home/gm_4_rosay/wheel_leg_correct/urdf/model/model.usd",  # 记得改回你的路径
+            activate_contact_sensors=True,
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(disable_gravity=False, max_depenetration_velocity=10.0),
+            articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+                enabled_self_collisions=False, solver_position_iteration_count=8, solver_velocity_iteration_count=4,
+            ),
+        ),
+        init_state=ArticulationCfg.InitialStateCfg(
+            pos=(0.0, 0.0, 0.13), rot=(1.0, 0.0, 0.0, 0.0),
+            joint_pos={".*": 0.0}, joint_vel={".*": 0.0},
+        ),
+        # 🚨 把三个执行器都挂载上去
+        actuators={"hips": hip_actuator, "knees": knee_actuator, "wheels": wheel_actuator},
+    )
 
-
+##
+# 2. 场景定义
+##
 @configclass
 class WheelLegSceneCfg(InteractiveSceneCfg):
-    """Configuration for a cart-pole scene."""
-
-    # ground plane
     ground = AssetBaseCfg(
-        prim_path="/World/ground",
-        spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
+        prim_path="/World/ground", spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
     )
-
-    # robot
-    robot: ArticulationCfg = CARTPOLE_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-
-    # lights
+    # 把机器人加入场景，并加上正则前缀以便并行生成4096个
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
     dome_light = AssetBaseCfg(
-        prim_path="/World/DomeLight",
-        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+        prim_path="/World/DomeLight", spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
     )
 
-
 ##
-# MDP settings
+# 3. 动作、观察、奖励 (MDP)
 ##
-
-
 @configclass
 class ActionsCfg:
-    """Action specifications for the MDP."""
-
-    joint_effort = mdp.JointEffortActionCfg(asset_name="robot", joint_names=["slider_to_cart"], scale=100.0)
-
+    # 腿部：位置控制 (输出目标角度)
+    leg_joints = mdp.JointPositionActionCfg(asset_name="robot", joint_names=[".*hip.*"], scale=0.5)
+    # 车轮：力矩控制 (输出目标力矩)
+    wheel_joints = mdp.JointEffortActionCfg(asset_name="robot", joint_names=[".*ankle.*"], scale=0.5)
 
 @configclass
 class ObservationsCfg:
-    """Observation specifications for the MDP."""
-
     @configclass
     class PolicyCfg(ObsGroup):
-        """Observations for policy group."""
-
-        # observation terms (order preserved)
-        joint_pos_rel = ObsTerm(func=mdp.joint_pos_rel)
-        joint_vel_rel = ObsTerm(func=mdp.joint_vel_rel)
-
+        # 虚拟 IMU: 机身姿态 (重力向量在机身坐标系的投影)
+        projected_gravity = ObsTerm(func=mdp.projected_gravity)
+        # 编码器: 所有关节当前角度和速度
+        joint_pos = ObsTerm(func=mdp.joint_pos_rel)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel)
+        # 上一帧动作
+        actions = ObsTerm(func=mdp.last_action)
         def __post_init__(self) -> None:
             self.enable_corruption = False
             self.concatenate_terms = True
-
-    # observation groups
     policy: PolicyCfg = PolicyCfg()
-
 
 @configclass
 class EventCfg:
-    """Configuration for events."""
-
-    # reset
-    reset_cart_position = EventTerm(
-        func=mdp.reset_joints_by_offset,
+    # 摔倒后复位机器人的高度和姿态
+    reset_robot = EventTerm(
+        func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=["slider_to_cart"]),
-            "position_range": (-1.0, 1.0),
-            "velocity_range": (-0.5, 0.5),
+            "pose_range": {"x": (-0.1, 0.1), "y": (-0.1, 0.1), "z": (0.0, 0.0), "roll": (-0.1, 0.1), "pitch": (-0.1, 0.1), "yaw": (-3.14, 3.14)},
+            "velocity_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0), "roll": (0.0, 0.0), "pitch": (0.0, 0.0), "yaw": (0.0, 0.0)},
         },
     )
-
-    reset_pole_position = EventTerm(
-        func=mdp.reset_joints_by_offset,
-        mode="reset",
-        params={
-            "asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"]),
-            "position_range": (-0.25 * math.pi, 0.25 * math.pi),
-            "velocity_range": (-0.25 * math.pi, 0.25 * math.pi),
-        },
+    # 复位关节角度
+    reset_joints = EventTerm(
+        func=mdp.reset_joints_by_scale, mode="reset", params={"position_range": (0.0, 0.0), "velocity_range": (0.0, 0.0),"asset_cfg": SceneEntityCfg("robot")},
     )
-
 
 @configclass
 class RewardsCfg:
-    """Reward terms for the MDP."""
-
-    # (1) Constant running reward
+    # 活着就给分
     alive = RewTerm(func=mdp.is_alive, weight=1.0)
-    # (2) Failure penalty
-    terminating = RewTerm(func=mdp.is_terminated, weight=-2.0)
-    # (3) Primary task: keep pole upright
-    pole_pos = RewTerm(
-        func=mdp.joint_pos_target_l2,
-        weight=-1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"]), "target": 0.0},
+    # 摔倒扣大分
+    terminating = RewTerm(func=mdp.is_terminated, weight=-20.0)
+    # 惩罚机身俯仰角 (逼迫它保持水平站立)
+    flat_orientation = RewTerm(func=mdp.flat_orientation_l2, weight=-1.0)
+    # 🚨 增加对大关节速度和大力矩的惩罚，防止速度爆炸产生 NaN
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
+    joint_vel_l2 = RewTerm(func=mdp.joint_vel_l2, weight=-0.0001)
+    joint_deviation = RewTerm(
+        func=mdp.joint_deviation_l1, 
+        weight=-0.5, 
+        params={"asset_cfg": SceneEntityCfg("robot")}
     )
-    # (4) Shaping tasks: lower cart velocity
-    cart_vel = RewTerm(
-        func=mdp.joint_vel_l1,
-        weight=-0.01,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["slider_to_cart"])},
-    )
-    # (5) Shaping tasks: lower pole angular velocity
-    pole_vel = RewTerm(
-        func=mdp.joint_vel_l1,
-        weight=-0.005,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["cart_to_pole"])},
-    )
-
 
 @configclass
 class TerminationsCfg:
-    """Termination terms for the MDP."""
-
-    # (1) Time out
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-    # (2) Cart out of bounds
-    cart_out_of_bounds = DoneTerm(
-        func=mdp.joint_pos_out_of_manual_limit,
-        params={"asset_cfg": SceneEntityCfg("robot", joint_names=["slider_to_cart"]), "bounds": (-3.0, 3.0)},
+    # 🚨 终结条件：如果机身高度低于 0.15米，判定为摔倒 (根据你的模型尺寸可能需要修改 0.15 这个数字)
+    base_height = DoneTerm(
+    func=mdp.root_height_below_minimum, 
+    params={"minimum_height": 0.09, "asset_cfg": SceneEntityCfg("robot")}
     )
 
-
 ##
-# Environment configuration
+# 4. 最终环境注册
 ##
-
-
 @configclass
 class WheelLegEnvCfg(ManagerBasedRLEnvCfg):
-    # Scene settings
-    scene: WheelLegSceneCfg = WheelLegSceneCfg(num_envs=4096, env_spacing=4.0)
-    # Basic settings
+    scene: WheelLegSceneCfg = WheelLegSceneCfg(num_envs=4096, env_spacing=2.5) # 试训时可以改小点 num_envs=64
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
     events: EventCfg = EventCfg()
-    # MDP settings
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
+    is_finite_obs = True 
 
-    # Post initialization
     def __post_init__(self) -> None:
-        """Post initialization."""
-        # general settings
-        self.decimation = 2
-        self.episode_length_s = 5
-        # viewer settings
-        self.viewer.eye = (8.0, 0.0, 5.0)
-        # simulation settings
+        self.decimation = 4  # RL 控制频率: 120Hz / 4 = 30Hz
+        self.episode_length_s = 10.0
+        self.viewer.eye = (2.0, 2.0, 1.0)
         self.sim.dt = 1 / 120
         self.sim.render_interval = self.decimation

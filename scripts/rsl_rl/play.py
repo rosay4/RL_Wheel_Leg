@@ -169,6 +169,21 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             actions = policy(obs)
             # env stepping
             obs, _, _, _ = env.step(actions)
+        # === 新增的打印代码 ===
+        # 假设你在 env_cfg 中把你的机器人命名为 "robot" (默认通常如此)
+        robot = env.unwrapped.scene["robot"] 
+
+        # 获取第0个环境 (第一个机器人) 的所有关节实际施加的扭矩
+        # 数据通常在 .data.applied_torque 或 .data.computed_torque 中
+        torques = robot.data.applied_torque[0] 
+
+        # 获取神经网络输出的动作 (Action)
+        # action = env.action_manager.action[0]
+
+        # 为了防止终端刷屏太快，你可以用简单的格式化打印
+        # .round(2) 是为了保留两位小数，方便肉眼看
+        print(f"实时电机扭矩: {torques.cpu().numpy().round(2)}")
+        # =====================
         if args_cli.video:
             timestep += 1
             # Exit the play loop after recording one video

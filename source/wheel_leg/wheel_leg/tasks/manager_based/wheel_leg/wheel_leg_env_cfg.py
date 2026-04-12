@@ -210,5 +210,5 @@ class WheelLegEnvCfg(ManagerBasedRLEnvCfg):
         self.decimation = 4  # RL 控制频率: 120Hz / 4 = 30Hz 
         self.episode_length_s = 10.0
         self.viewer.eye = (2.0, 2.0, 1.0)
-        self.sim.dt = 1 / 120
+        self.sim.dt = 1 / 200
         self.sim.render_interval = self.decimation

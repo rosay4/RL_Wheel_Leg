@@ -54,7 +54,7 @@ def get_wheel_leg_robot_cfg() -> ArticulationCfg:
             activate_contact_sensors=True,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(disable_gravity=False, max_depenetration_velocity=10.0),
             articulation_props=sim_utils.ArticulationRootPropertiesCfg(
-                enabled_self_collisions=False, solver_position_iteration_count=8, solver_velocity_iteration_count=4,
+                enabled_self_collisions=False, solver_position_iteration_count=16, solver_velocity_iteration_count=8,
             ),
         ),
         init_state=ArticulationCfg.InitialStateCfg(
@@ -106,12 +106,18 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         # --- 1. IMU 观测 (物理绝对能拿到的数据) ---
         projected_gravity = ObsTerm(func=mdp.projected_gravity) # 机身俯仰/横滚状态
-        base_ang_vel = ObsTerm(func=mdp.base_ang_vel)           # 陀螺仪角速度
+        base_ang_vel = ObsTerm(           # 陀螺仪角速度
+            func=mdp.base_ang_vel, 
+            scale=0.1, 
+            clip=(-10.0, 10.0) # 防止物理异常导致角速度爆炸传入网络
+        )
 
         # --- 2. 车轮编码器 (串口反馈能拿到的数据) ---
         wheel_vel = ObsTerm(
             func=mdp.joint_vel_rel, 
-            params={"asset_cfg": WHEEL_CFG} # 🚨 绝对不能混入腿部速度！只读车轮
+            params={"asset_cfg": WHEEL_CFG},  # 🚨 绝对不能混入腿部速度！只读车轮
+            scale=0.1, 
+            clip=(-20.0, 20.0) # 🚨 防止轮子悬空时转速积分到无穷大
         )
 
         # --- 3. 历史动作反馈 (彻底替代腿部编码器状态) ---
@@ -160,6 +166,13 @@ class RewardsCfg:
 
     # 🚨 重要修改：防止惩罚车轮转动
     # 因为平衡车站立必须靠轮子来回转，如果不限制 asset_cfg，轮子的正常转速也会被扣分
+    # 🚨 给车轮加一点点微弱的转速惩罚，目的不是阻止它平衡，而是阻止网络发现“把轮子转速加到无穷大可以卡出Bug”
+    wheel_vel_l2_penalty = RewTerm(
+        func=mdp.joint_vel_l2, 
+        weight=-1e-5, 
+        params={"asset_cfg": WHEEL_CFG}
+    )
+
     joint_vel_l2 = RewTerm(
         func=mdp.joint_vel_l2, 
         weight=-0.0001,

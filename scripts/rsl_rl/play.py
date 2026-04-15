@@ -85,12 +85,12 @@ import wheel_leg.tasks  # noqa: F401
 class Se2KeyboardTeleop:
     """Simple SE(2) keyboard controller for velocity commands."""
 
-    def __init__(self, vx_scale: float = 0.6, wz_scale: float = 1.0):
+    def __init__(self, vy_scale: float = 0.6, wz_scale: float = 1.0):
         import carb
         import omni.appwindow
 
         self._carb = carb
-        self._vx_scale = vx_scale
+        self._vy_scale = vy_scale
         self._wz_scale = wz_scale
         self._base_command = [0.0, 0.0, 0.0]
         self._reset_requested = False
@@ -103,10 +103,10 @@ class Se2KeyboardTeleop:
             lambda event, *args, obj=weakref.proxy(self): obj._on_keyboard_event(event, *args),
         )
         self._key_map = {
-            "W": (self._vx_scale, 0.0, 0.0),
-            "UP": (self._vx_scale, 0.0, 0.0),
-            "S": (-self._vx_scale, 0.0, 0.0),
-            "DOWN": (-self._vx_scale, 0.0, 0.0),
+            "W": (0.0, self._vy_scale, 0.0),
+            "UP": (0.0, self._vy_scale, 0.0),
+            "S": (0.0, -self._vy_scale, 0.0),
+            "DOWN": (0.0, -self._vy_scale, 0.0),
             "A": (0.0, 0.0, self._wz_scale),
             "LEFT": (0.0, 0.0, self._wz_scale),
             "D": (0.0, 0.0, -self._wz_scale),
@@ -222,7 +222,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     teleop = None
     teleop_command = None
     if args_cli.keyboard:
-        teleop = Se2KeyboardTeleop(vx_scale=0.6, wz_scale=1.0)
+        teleop = Se2KeyboardTeleop(vy_scale=0.6, wz_scale=1.0)
         teleop_command = env.unwrapped.command_manager.get_command("base_velocity")
         print(teleop)
         if env.unwrapped.num_envs != 1:

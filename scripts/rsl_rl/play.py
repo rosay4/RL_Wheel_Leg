@@ -8,38 +8,8 @@
 """Launch Isaac Sim Simulator first."""
 
 import argparse
-import os
 import sys
-import time
-import weakref
-
-import gymnasium as gym
-import torch
 from isaaclab.app import AppLauncher
-from rsl_rl.runners import OnPolicyRunner
-
-from isaaclab.envs import (
-    DirectMARLEnv,
-    DirectMARLEnvCfg,
-    DirectRLEnvCfg,
-    ManagerBasedRLEnvCfg,
-    multi_agent_to_single_agent,
-)
-from isaaclab.utils.assets import retrieve_file_path
-from isaaclab.utils.dict import print_dict
-from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
-from isaaclab_rl.rsl_rl import (
-    RslRlOnPolicyRunnerCfg,
-    RslRlVecEnvWrapper,
-    export_policy_as_jit,
-    export_policy_as_onnx,
-)
-
-import isaaclab_tasks  # noqa: F401
-from isaaclab_tasks.utils import get_checkpoint_path
-from isaaclab_tasks.utils.hydra import hydra_task_config
-
-import wheel_leg.tasks  # noqa: F401
 
 # local imports
 import cli_args  # isort: skip
@@ -77,6 +47,39 @@ sys.argv = [sys.argv[0]] + hydra_args
 
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
+
+"""Rest everything follows."""
+
+import os
+import time
+import weakref
+
+import gymnasium as gym
+import torch
+from rsl_rl.runners import OnPolicyRunner
+
+from isaaclab.envs import (
+    DirectMARLEnv,
+    DirectMARLEnvCfg,
+    DirectRLEnvCfg,
+    ManagerBasedRLEnvCfg,
+    multi_agent_to_single_agent,
+)
+from isaaclab.utils.assets import retrieve_file_path
+from isaaclab.utils.dict import print_dict
+from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
+from isaaclab_rl.rsl_rl import (
+    RslRlOnPolicyRunnerCfg,
+    RslRlVecEnvWrapper,
+    export_policy_as_jit,
+    export_policy_as_onnx,
+)
+
+import isaaclab_tasks  # noqa: F401
+from isaaclab_tasks.utils import get_checkpoint_path
+from isaaclab_tasks.utils.hydra import hydra_task_config
+
+import wheel_leg.tasks  # noqa: F401
 
 
 class Se2KeyboardTeleop:

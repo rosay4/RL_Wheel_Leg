@@ -120,10 +120,10 @@ class Se2KeyboardTeleop:
             "UP": (0.0, self._vy_scale, 0.0),
             "S": (0.0, -self._vy_scale, 0.0),
             "DOWN": (0.0, -self._vy_scale, 0.0),
-            "A": (0.0, 0.0, self._wz_scale),
-            "LEFT": (0.0, 0.0, self._wz_scale),
-            "D": (0.0, 0.0, -self._wz_scale),
-            "RIGHT": (0.0, 0.0, -self._wz_scale),
+            "A": (0.0, 0.0, -self._wz_scale),
+            "LEFT": (0.0, 0.0, -self._wz_scale),
+            "D": (0.0, 0.0, self._wz_scale),
+            "RIGHT": (0.0, 0.0, self._wz_scale),
         }
 
     def __del__(self):

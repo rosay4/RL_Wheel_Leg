@@ -16,6 +16,7 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.noise import AdditiveGaussianNoiseCfg
 
 
 ROBOT_CFG = SceneEntityCfg("robot")
@@ -129,24 +130,28 @@ class ObservationsCfg:
             func=mdp.base_ang_vel,
             scale=0.1,
             clip=(-10.0, 10.0),
+            noise=AdditiveGaussianNoiseCfg(mean=0.0, std=0.02),
         )
         wheel_vel = ObsTerm(
             func=mdp.joint_vel_rel,
             params={"asset_cfg": WHEEL_CFG},
             scale=0.1,
             clip=(-20.0, 20.0),
+            noise=AdditiveGaussianNoiseCfg(mean=0.0, std=0.15),
         )
         last_action_leg = ObsTerm(
             func=mdp.last_action,
             params={"action_name": "leg_joints"},
+            noise=AdditiveGaussianNoiseCfg(mean=0.0, std=0.01),
         )
         last_action_wheel = ObsTerm(
             func=mdp.last_action,
             params={"action_name": "wheel_joints"},
+            noise=AdditiveGaussianNoiseCfg(mean=0.0, std=0.02),
         )
 
         def __post_init__(self) -> None:
-            self.enable_corruption = False
+            self.enable_corruption = True
             self.concatenate_terms = True
             self.history_length = 5
 
@@ -155,6 +160,26 @@ class ObservationsCfg:
 
 @configclass
 class EventCfg:
+    robot_physics_material = EventTerm(
+        func=mdp.randomize_rigid_body_material,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*"),
+            "static_friction_range": (0.6, 1.2),
+            "dynamic_friction_range": (0.5, 1.0),
+            "restitution_range": (0.0, 0.0),
+            "num_buckets": 32,
+        },
+    )
+    add_base_mass = EventTerm(
+        func=mdp.randomize_rigid_body_mass,
+        mode="startup",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=".*base.*"),
+            "mass_distribution_params": (-0.25, 0.25),
+            "operation": "add",
+        },
+    )
     reset_robot = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
@@ -168,12 +193,12 @@ class EventCfg:
                 "yaw": (-math.pi, math.pi),
             },
             "velocity_range": {
-                "x": (0.0, 0.0),
-                "y": (0.0, 0.0),
+                "x": (-0.2, 0.2),
+                "y": (-0.2, 0.2),
                 "z": (0.0, 0.0),
-                "roll": (0.0, 0.0),
-                "pitch": (0.0, 0.0),
-                "yaw": (0.0, 0.0),
+                "roll": (-0.2, 0.2),
+                "pitch": (-0.2, 0.2),
+                "yaw": (-0.3, 0.3),
             },
         },
     )
@@ -181,9 +206,24 @@ class EventCfg:
         func=mdp.reset_joints_by_scale,
         mode="reset",
         params={
-            "position_range": (0.0, 0.0),
-            "velocity_range": (0.0, 0.0),
+            "position_range": (0.9, 1.1),
+            "velocity_range": (0.0, 0.1),
             "asset_cfg": SceneEntityCfg("robot"),
+        },
+    )
+    base_push = EventTerm(
+        func=mdp.push_by_setting_velocity,
+        mode="interval",
+        interval_range_s=(2.5, 4.5),
+        params={
+            "velocity_range": {
+                "x": (-0.2, 0.2),
+                "y": (-0.2, 0.2),
+                "z": (0.0, 0.0),
+                "roll": (0.0, 0.0),
+                "pitch": (0.0, 0.0),
+                "yaw": (-0.4, 0.4),
+            }
         },
     )
 

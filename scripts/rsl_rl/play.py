@@ -36,6 +36,18 @@ parser.add_argument(
     default=False,
     help="Use keyboard to override the base velocity command during playback.",
 )
+parser.add_argument(
+    "--debug-base-frame",
+    action="store_true",
+    default=False,
+    help="Print the first robot base-frame command, velocity, and frame axes during playback.",
+)
+parser.add_argument(
+    "--debug-interval",
+    type=int,
+    default=20,
+    help="Number of simulation steps between debug prints when --debug-base-frame is enabled.",
+)
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -67,6 +79,7 @@ from isaaclab.envs import (
 )
 from isaaclab.utils.assets import retrieve_file_path
 from isaaclab.utils.dict import print_dict
+from isaaclab.utils.math import quat_apply
 from isaaclab.utils.pretrained_checkpoint import get_published_pretrained_checkpoint
 from isaaclab_rl.rsl_rl import (
     RslRlOnPolicyRunnerCfg,
@@ -156,6 +169,27 @@ class Se2KeyboardTeleop:
         return True
 
 
+def _get_base_frame_debug(robot):
+    """Collect base-frame debug values from the robot data buffers."""
+    quat_w = getattr(robot.data, "root_quat_w", None)
+    lin_vel_b = getattr(robot.data, "root_lin_vel_b", None)
+    ang_vel_b = getattr(robot.data, "root_ang_vel_b", None)
+    if quat_w is None:
+        quat_w = getattr(robot.data, "body_quat_w", None)
+        if quat_w is not None:
+            quat_w = quat_w[:, 0, :]
+    if lin_vel_b is None:
+        lin_vel_b = getattr(robot.data, "root_com_lin_vel_b", None)
+    if ang_vel_b is None:
+        ang_vel_b = getattr(robot.data, "root_com_ang_vel_b", None)
+    return quat_w, lin_vel_b, ang_vel_b
+
+
+def _format_tensor3(tensor) -> str:
+    values = tensor.detach().cpu().tolist()
+    return f"[{values[0]: .3f}, {values[1]: .3f}, {values[2]: .3f}]"
+
+
 @hydra_task_config(args_cli.task, "rsl_rl_cfg_entry_point")
 def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlOnPolicyRunnerCfg):
     """Play with an RSL-RL agent."""
@@ -221,6 +255,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     teleop = None
     teleop_command = None
+    robot = env.unwrapped.scene["robot"] if args_cli.debug_base_frame else None
     if args_cli.keyboard:
         teleop = Se2KeyboardTeleop(vy_scale=0.6, wz_scale=1.0)
         teleop_command = env.unwrapped.command_manager.get_command("base_velocity")
@@ -250,10 +285,29 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
 
-        if args_cli.video:
-            timestep += 1
-            if timestep == args_cli.video_length:
-                break
+        if args_cli.debug_base_frame and timestep % max(args_cli.debug_interval, 1) == 0:
+            quat_w, lin_vel_b, ang_vel_b = _get_base_frame_debug(robot)
+            if quat_w is not None and lin_vel_b is not None and ang_vel_b is not None:
+                base_x_w = quat_apply(quat_w[0:1], torch.tensor([[1.0, 0.0, 0.0]], device=quat_w.device))[0]
+                base_y_w = quat_apply(quat_w[0:1], torch.tensor([[0.0, 1.0, 0.0]], device=quat_w.device))[0]
+                current_command = None
+                if teleop_command is not None:
+                    current_command = teleop_command[0, :3]
+                else:
+                    current_command = env.unwrapped.command_manager.get_command("base_velocity")[0, :3]
+                print(
+                    "[BASE-DEBUG] "
+                    f"cmd_b={_format_tensor3(current_command)} "
+                    f"lin_vel_b={_format_tensor3(lin_vel_b[0])} "
+                    f"ang_vel_b={_format_tensor3(ang_vel_b[0])} "
+                    f"base_x_w={_format_tensor3(base_x_w)} "
+                    f"base_y_w={_format_tensor3(base_y_w)}"
+                )
+
+        timestep += 1
+
+        if args_cli.video and timestep == args_cli.video_length:
+            break
 
         sleep_time = dt - (time.time() - start_time)
         if args_cli.real_time and sleep_time > 0:

@@ -116,10 +116,10 @@ class Se2KeyboardTeleop:
             lambda event, *args, obj=weakref.proxy(self): obj._on_keyboard_event(event, *args),
         )
         self._key_map = {
-            "W": (0.0, self._vy_scale, 0.0),
-            "UP": (0.0, self._vy_scale, 0.0),
-            "S": (0.0, -self._vy_scale, 0.0),
-            "DOWN": (0.0, -self._vy_scale, 0.0),
+            "W": (0.0, -self._vy_scale, 0.0),
+            "UP": (0.0, -self._vy_scale, 0.0),
+            "S": (0.0, self._vy_scale, 0.0),
+            "DOWN": (0.0, self._vy_scale, 0.0),
             "A": (0.0, 0.0, -self._wz_scale),
             "LEFT": (0.0, 0.0, -self._wz_scale),
             "D": (0.0, 0.0, self._wz_scale),

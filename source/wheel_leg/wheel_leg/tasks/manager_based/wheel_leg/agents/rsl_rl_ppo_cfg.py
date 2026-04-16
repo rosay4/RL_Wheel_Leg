@@ -35,3 +35,9 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
+
+
+@configclass
+class RoughPPORunnerCfg(PPORunnerCfg):
+    experiment_name = "wheel_leg_rough_light"
+    max_iterations = 1500

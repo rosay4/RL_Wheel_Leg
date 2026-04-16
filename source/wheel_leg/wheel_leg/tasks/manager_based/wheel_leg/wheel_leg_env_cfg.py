@@ -15,6 +15,8 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
+from isaaclab.terrains import TerrainGeneratorCfg, TerrainImporterCfg
+from isaaclab.terrains.trimesh.mesh_terrains_cfg import MeshRandomGridTerrainCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveGaussianNoiseCfg
 
@@ -76,6 +78,39 @@ class WheelLegSceneCfg(InteractiveSceneCfg):
     ground = AssetBaseCfg(
         prim_path="/World/ground",
         spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
+    )
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+    )
+
+
+@configclass
+class WheelLegRoughSceneCfg(InteractiveSceneCfg):
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=False,
+            size=(6.0, 6.0),
+            border_width=8.0,
+            num_rows=6,
+            num_cols=6,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.0, 0.35),
+            sub_terrains={
+                "rough_grid": MeshRandomGridTerrainCfg(
+                    proportion=1.0,
+                    grid_width=0.35,
+                    grid_height_range=(0.0, 0.04),
+                    platform_width=2.0,
+                ),
+            },
+        ),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
     dome_light = AssetBaseCfg(
@@ -299,3 +334,13 @@ class WheelLegEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer.eye = (2.0, 2.0, 1.0)
         self.sim.dt = 1 / 200
         self.sim.render_interval = self.decimation
+
+
+@configclass
+class WheelLegRoughEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegRoughSceneCfg = WheelLegRoughSceneCfg(num_envs=4096, env_spacing=6.0)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.viewer.eye = (3.0, 3.0, 1.8)
+        self.terminations.base_height.params["minimum_height"] = 0.07

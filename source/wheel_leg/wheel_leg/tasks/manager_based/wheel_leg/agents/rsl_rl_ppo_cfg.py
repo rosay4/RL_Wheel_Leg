@@ -39,5 +39,5 @@ class PPORunnerCfg(RslRlOnPolicyRunnerCfg):
 
 @configclass
 class RoughPPORunnerCfg(PPORunnerCfg):
-    experiment_name = "wheel_leg_rough_light"
+    experiment_name = "wheel_leg_command"
     max_iterations = 1500

@@ -86,7 +86,7 @@ class WheelLegSceneCfg(InteractiveSceneCfg):
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
     calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        prim_path="{ENV_REGEX_NS}/Robot/.*",
         update_period=0.0,
         history_length=3,
         debug_vis=False,
@@ -125,7 +125,7 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
     calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        prim_path="{ENV_REGEX_NS}/Robot/.*",
         update_period=0.0,
         history_length=3,
         debug_vis=False,
@@ -168,7 +168,7 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
     calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        prim_path="{ENV_REGEX_NS}/Robot/.*",
         update_period=0.0,
         history_length=3,
         debug_vis=False,

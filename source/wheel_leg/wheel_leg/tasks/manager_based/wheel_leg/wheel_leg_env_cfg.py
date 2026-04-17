@@ -101,13 +101,13 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
             horizontal_scale=0.1,
             vertical_scale=0.005,
             slope_threshold=0.75,
-            difficulty_range=(0.1, 0.5),
+            difficulty_range=(0.2, 0.7),
             sub_terrains={
                 "rough_grid": MeshRandomGridTerrainCfg(
                     proportion=1.0,
                     grid_width=0.35,
-                    grid_height_range=(0.0, 0.06),
-                    platform_width=1.2,
+                    grid_height_range=(0.0, 0.08),
+                    platform_width=2.0,
                 ),
             },
         ),
@@ -130,8 +130,8 @@ class CommandsCfg:
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(0.0, 0.0),
-            lin_vel_y=(-0.6, 0.8),
-            ang_vel_z=(-1.0, 1.0),
+            lin_vel_y=(-1.0, 1.2),
+            ang_vel_z=(-1.2, 1.2),
         ),
     )
 
@@ -345,4 +345,4 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.20)
         self.events.reset_robot.params["pose_range"]["z"] = (0.06, 0.12)
         self.viewer.eye = (4.0, 4.0, 2.2)
-        self.terminations.base_height.params["minimum_height"] = 0.07
+        self.terminations.base_height.params["minimum_height"] = 0.03

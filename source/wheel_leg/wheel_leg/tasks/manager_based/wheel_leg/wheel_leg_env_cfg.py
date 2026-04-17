@@ -101,13 +101,13 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
             horizontal_scale=0.1,
             vertical_scale=0.005,
             slope_threshold=0.75,
-            difficulty_range=(0.0, 0.35),
+            difficulty_range=(0.1, 0.5),
             sub_terrains={
                 "rough_grid": MeshRandomGridTerrainCfg(
                     proportion=1.0,
                     grid_width=0.35,
-                    grid_height_range=(0.0, 0.04),
-                    platform_width=2.0,
+                    grid_height_range=(0.0, 0.06),
+                    platform_width=1.2,
                 ),
             },
         ),

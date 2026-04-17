@@ -16,6 +16,10 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.terrains import TerrainGeneratorCfg, TerrainImporterCfg
+from isaaclab.terrains.height_field.hf_terrains_cfg import (
+    HfInvertedPyramidSlopedTerrainCfg,
+    HfPyramidSlopedTerrainCfg,
+)
 from isaaclab.terrains.trimesh.mesh_terrains_cfg import MeshRandomGridTerrainCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveGaussianNoiseCfg
@@ -107,6 +111,43 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
                     proportion=1.0,
                     grid_width=0.35,
                     grid_height_range=(0.0, 0.08),
+                    platform_width=1.2,
+                ),
+            },
+        ),
+    )
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+    )
+
+
+@configclass
+class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=False,
+            size=(6.0, 6.0),
+            border_width=8.0,
+            num_rows=6,
+            num_cols=6,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.2, 0.7),
+            sub_terrains={
+                "slope_up": HfPyramidSlopedTerrainCfg(
+                    proportion=0.5,
+                    slope_range=(0.08, 0.22),
+                    platform_width=2.0,
+                ),
+                "slope_down": HfInvertedPyramidSlopedTerrainCfg(
+                    proportion=0.5,
+                    slope_range=(0.05, 0.18),
                     platform_width=2.0,
                 ),
             },
@@ -346,3 +387,15 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
         self.events.reset_robot.params["pose_range"]["z"] = (0.06, 0.12)
         self.viewer.eye = (4.0, 4.0, 2.2)
         self.terminations.base_height.params["minimum_height"] = 0.03
+
+
+@configclass
+class WheelLegSlopeEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegSlopeSceneCfg = WheelLegSlopeSceneCfg(num_envs=4096, env_spacing=6.0)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.18)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.04, 0.10)
+        self.viewer.eye = (4.0, 4.0, 2.0)
+        self.terminations.base_height.params["minimum_height"] = 0.04

@@ -15,7 +15,6 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import ContactSensorCfg
 from isaaclab.terrains import TerrainGeneratorCfg, TerrainImporterCfg
 from isaaclab.terrains.height_field.hf_terrains_cfg import (
     HfInvertedPyramidSlopedTerrainCfg,
@@ -85,12 +84,6 @@ class WheelLegSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
-    calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*",
-        update_period=0.0,
-        history_length=3,
-        debug_vis=False,
-    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -124,12 +117,6 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
         ),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
-    calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*",
-        update_period=0.0,
-        history_length=3,
-        debug_vis=False,
-    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -167,12 +154,6 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
         ),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
-    calf_contact = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/.*",
-        update_period=0.0,
-        history_length=3,
-        debug_vis=False,
-    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -362,10 +343,6 @@ class TerminationsCfg:
     bad_orientation = DoneTerm(
         func=mdp.bad_orientation,
         params={"limit_angle": 1.2, "asset_cfg": SceneEntityCfg("robot")},
-    )
-    calf_contact = DoneTerm(
-        func=mdp.illegal_contact,
-        params={"sensor_cfg": SceneEntityCfg("calf_contact", body_names=".*calf.*"), "threshold": 8.0},
     )
     base_height = DoneTerm(
         func=mdp.root_height_below_minimum,

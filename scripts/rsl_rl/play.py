@@ -48,6 +48,12 @@ parser.add_argument(
     default=20,
     help="Number of simulation steps between debug prints when --debug-base-frame is enabled.",
 )
+parser.add_argument(
+    "--debug-reset-reason",
+    action="store_true",
+    default=False,
+    help="Print active termination terms for the first environment whenever it resets.",
+)
 cli_args.add_rsl_rl_args(parser)
 AppLauncher.add_app_launcher_args(parser)
 args_cli, hydra_args = parser.parse_known_args()
@@ -283,7 +289,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
         with torch.inference_mode():
             actions = policy(obs)
-            obs, _, _, _ = env.step(actions)
+            obs, _, terminated, _ = env.step(actions)
 
         if args_cli.debug_base_frame and timestep % max(args_cli.debug_interval, 1) == 0:
             quat_w, lin_vel_b, ang_vel_b = _get_base_frame_debug(robot)
@@ -303,6 +309,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
                     f"base_x_w={_format_tensor3(base_x_w)} "
                     f"base_y_w={_format_tensor3(base_y_w)}"
                 )
+
+        if args_cli.debug_reset_reason:
+            terminated_env_ids = torch.nonzero(terminated, as_tuple=False).squeeze(-1)
+            if terminated_env_ids.numel() > 0:
+                first_env_id = int(terminated_env_ids[0].item())
+                active_terms = env.unwrapped.termination_manager.get_active_iterable_terms(first_env_id)
+                print(f"[RESET-DEBUG] env={first_env_id} active_terms={list(active_terms)}")
 
         timestep += 1
 

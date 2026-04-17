@@ -111,7 +111,7 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
                     proportion=1.0,
                     grid_width=0.35,
                     grid_height_range=(0.0, 0.08),
-                    platform_width=2.0,
+                    platform_width=1.4,
                 ),
             },
         ),
@@ -143,12 +143,12 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
                 "slope_up": HfPyramidSlopedTerrainCfg(
                     proportion=0.5,
                     slope_range=(0.10, 0.26),
-                    platform_width=2.0,
+                    platform_width=1.4,
                 ),
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
                     proportion=0.5,
                     slope_range=(0.08, 0.22),
-                    platform_width=2.0,
+                    platform_width=1.4,
                 ),
             },
         ),
@@ -386,7 +386,7 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.24)
         self.events.reset_robot.params["pose_range"]["z"] = (0.10, 0.18)
         self.viewer.eye = (4.0, 4.0, 2.2)
-        self.terminations.base_height.params["minimum_height"] = 0.01
+        self.terminations.base_height.params["minimum_height"] = -0.05
 
 
 @configclass
@@ -398,4 +398,4 @@ class WheelLegSlopeEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.22)
         self.events.reset_robot.params["pose_range"]["z"] = (0.08, 0.14)
         self.viewer.eye = (4.0, 4.0, 2.0)
-        self.terminations.base_height.params["minimum_height"] = 0.01
+        self.terminations.base_height.params["minimum_height"] = -0.03

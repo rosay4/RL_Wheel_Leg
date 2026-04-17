@@ -15,6 +15,7 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
+from isaaclab.sensors import ContactSensorCfg
 from isaaclab.terrains import TerrainGeneratorCfg, TerrainImporterCfg
 from isaaclab.terrains.height_field.hf_terrains_cfg import (
     HfInvertedPyramidSlopedTerrainCfg,
@@ -84,6 +85,12 @@ class WheelLegSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.GroundPlaneCfg(size=(100.0, 100.0)),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    calf_contact = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        update_period=0.0,
+        history_length=3,
+        debug_vis=False,
+    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -111,12 +118,18 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
                     proportion=1.0,
                     grid_width=0.35,
                     grid_height_range=(0.0, 0.08),
-                    platform_width=1.2,
+                    platform_width=2.0,
                 ),
             },
         ),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    calf_contact = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        update_period=0.0,
+        history_length=3,
+        debug_vis=False,
+    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -142,18 +155,24 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
             sub_terrains={
                 "slope_up": HfPyramidSlopedTerrainCfg(
                     proportion=0.5,
-                    slope_range=(0.08, 0.22),
+                    slope_range=(0.10, 0.26),
                     platform_width=2.0,
                 ),
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
                     proportion=0.5,
-                    slope_range=(0.05, 0.18),
+                    slope_range=(0.08, 0.22),
                     platform_width=2.0,
                 ),
             },
         ),
     )
     robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    calf_contact = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/.*calf.*",
+        update_period=0.0,
+        history_length=3,
+        debug_vis=False,
+    )
     dome_light = AssetBaseCfg(
         prim_path="/World/DomeLight",
         spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
@@ -344,6 +363,10 @@ class TerminationsCfg:
         func=mdp.bad_orientation,
         params={"limit_angle": 1.2, "asset_cfg": SceneEntityCfg("robot")},
     )
+    calf_contact = DoneTerm(
+        func=mdp.illegal_contact,
+        params={"sensor_cfg": SceneEntityCfg("calf_contact", body_names=".*calf.*"), "threshold": 8.0},
+    )
     base_height = DoneTerm(
         func=mdp.root_height_below_minimum,
         params={"minimum_height": 0.09, "asset_cfg": SceneEntityCfg("robot")},
@@ -383,10 +406,10 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.scene.robot.init_state.pos = (0.0, 0.0, 0.20)
-        self.events.reset_robot.params["pose_range"]["z"] = (0.06, 0.12)
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.24)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.10, 0.18)
         self.viewer.eye = (4.0, 4.0, 2.2)
-        self.terminations.base_height.params["minimum_height"] = 0.03
+        self.terminations.base_height.params["minimum_height"] = 0.01
 
 
 @configclass
@@ -395,7 +418,7 @@ class WheelLegSlopeEnvCfg(WheelLegEnvCfg):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.scene.robot.init_state.pos = (0.0, 0.0, 0.18)
-        self.events.reset_robot.params["pose_range"]["z"] = (0.04, 0.10)
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.22)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.08, 0.14)
         self.viewer.eye = (4.0, 4.0, 2.0)
-        self.terminations.base_height.params["minimum_height"] = 0.04
+        self.terminations.base_height.params["minimum_height"] = 0.01

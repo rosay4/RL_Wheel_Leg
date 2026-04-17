@@ -107,7 +107,7 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
                     proportion=1.0,
                     grid_width=0.35,
                     grid_height_range=(0.0, 0.06),
-                    platform_width=1.2,
+                    platform_width=2.0,
                 ),
             },
         ),
@@ -342,5 +342,7 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.viewer.eye = (3.0, 3.0, 1.8)
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.20)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.06, 0.12)
+        self.viewer.eye = (4.0, 4.0, 2.2)
         self.terminations.base_height.params["minimum_height"] = 0.07

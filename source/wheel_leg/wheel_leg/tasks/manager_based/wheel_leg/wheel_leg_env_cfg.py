@@ -180,18 +180,18 @@ class WheelLegMixedSceneCfg(InteractiveSceneCfg):
                 "rough_grid": MeshRandomGridTerrainCfg(
                     proportion=0.45,
                     grid_width=0.35,
-                    grid_height_range=(0.0, 0.06),
-                    platform_width=1.4,
+                    grid_height_range=(0.0, 0.04),
+                    platform_width=1.0,
                 ),
                 "slope_up": HfPyramidSlopedTerrainCfg(
                     proportion=0.30,
                     slope_range=(0.10, 0.28),
-                    platform_width=1.4,
+                    platform_width=1.0,
                 ),
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
                     proportion=0.25,
                     slope_range=(0.08, 0.24),
-                    platform_width=1.4,
+                    platform_width=1.0,
                 ),
             },
         ),

@@ -17,7 +17,9 @@ from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.terrains import TerrainGeneratorCfg, TerrainImporterCfg
 from isaaclab.terrains.height_field.hf_terrains_cfg import (
+    HfDiscreteObstaclesTerrainCfg,
     HfInvertedPyramidSlopedTerrainCfg,
+    HfPyramidStairsTerrainCfg,
     HfPyramidSlopedTerrainCfg,
 )
 from isaaclab.terrains.trimesh.mesh_terrains_cfg import MeshRandomGridTerrainCfg
@@ -191,6 +193,62 @@ class WheelLegMixedSceneCfg(InteractiveSceneCfg):
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
                     proportion=0.25,
                     slope_range=(0.08, 0.24),
+                    platform_width=1.0,
+                ),
+            },
+        ),
+    )
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+    )
+
+
+@configclass
+class WheelLegUnstructuredSceneCfg(InteractiveSceneCfg):
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=True,
+            size=(6.0, 6.0),
+            border_width=8.0,
+            num_rows=10,
+            num_cols=10,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.25, 1.0),
+            sub_terrains={
+                "rough_grid": MeshRandomGridTerrainCfg(
+                    proportion=0.30,
+                    grid_width=0.30,
+                    grid_height_range=(0.0, 0.04),
+                    platform_width=1.0,
+                ),
+                "slope_up": HfPyramidSlopedTerrainCfg(
+                    proportion=0.20,
+                    slope_range=(0.12, 0.32),
+                    platform_width=1.0,
+                ),
+                "slope_down": HfInvertedPyramidSlopedTerrainCfg(
+                    proportion=0.15,
+                    slope_range=(0.10, 0.26),
+                    platform_width=1.0,
+                ),
+                "stairs": HfPyramidStairsTerrainCfg(
+                    proportion=0.20,
+                    step_height_range=(0.02, 0.10),
+                    step_width=0.35,
+                    platform_width=1.0,
+                ),
+                "obstacles": HfDiscreteObstaclesTerrainCfg(
+                    proportion=0.15,
+                    obstacle_width_range=(0.3, 1.0),
+                    obstacle_height_range=(0.02, 0.12),
+                    num_obstacles=20,
                     platform_width=1.0,
                 ),
             },
@@ -458,3 +516,16 @@ class WheelLegMixedEnvCfg(WheelLegEnvCfg):
         self.viewer.eye = (4.5, 4.5, 2.4)
         self.terminations.base_height.params["minimum_height"] = -1.0
         self.terminations.bad_orientation.params["limit_angle"] = 1.35
+
+
+@configclass
+class WheelLegUnstructuredEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegUnstructuredSceneCfg = WheelLegUnstructuredSceneCfg(num_envs=4096, env_spacing=6.0)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.26)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
+        self.viewer.eye = (5.0, 5.0, 2.6)
+        self.terminations.base_height.params["minimum_height"] = -1.0
+        self.terminations.bad_orientation.params["limit_angle"] = 1.40

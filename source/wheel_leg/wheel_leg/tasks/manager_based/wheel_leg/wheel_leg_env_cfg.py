@@ -49,7 +49,7 @@ def get_wheel_leg_robot_cfg() -> ArticulationCfg:
         joint_names_expr=[".*ankle.*"],
         stiffness=0.0,
         damping=0.5,
-        effort_limit=10.0,
+        effort_limit=12.0,
         velocity_limit=30.0,
     )
 
@@ -188,7 +188,7 @@ class ActionsCfg:
     wheel_joints = mdp.JointEffortActionCfg(
         asset_name="robot",
         joint_names=[".*ankle.*"],
-        scale=4.0,
+        scale=5.5,
     )
 
 

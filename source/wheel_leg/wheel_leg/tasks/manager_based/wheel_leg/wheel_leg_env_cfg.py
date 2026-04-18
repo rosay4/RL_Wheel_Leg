@@ -222,30 +222,24 @@ class WheelLegUnstructuredSceneCfg(InteractiveSceneCfg):
             slope_threshold=0.75,
             difficulty_range=(0.25, 1.0),
             sub_terrains={
-                "rough_grid": MeshRandomGridTerrainCfg(
-                    proportion=0.30,
-                    grid_width=0.15,
-                    grid_height_range=(0.0, 0.04),
-                    platform_width=1.2,
-                ),
                 "slope_up": HfPyramidSlopedTerrainCfg(
-                    proportion=0.20,
+                    proportion=0.35,
                     slope_range=(0.12, 0.32),
                     platform_width=1.2,
                 ),
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
-                    proportion=0.15,
+                    proportion=0.20,
                     slope_range=(0.10, 0.26),
                     platform_width=1.2,
                 ),
                 "stairs": HfPyramidStairsTerrainCfg(
-                    proportion=0.20,
+                    proportion=0.25,
                     step_height_range=(0.02, 0.10),
                     step_width=0.35,
                     platform_width=1.2,
                 ),
                 "obstacles": HfDiscreteObstaclesTerrainCfg(
-                    proportion=0.15,
+                    proportion=0.20,
                     obstacle_width_range=(0.3, 1.0),
                     obstacle_height_range=(0.02, 0.12),
                     num_obstacles=20,

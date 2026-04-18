@@ -386,7 +386,9 @@ class WheelLegRoughEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.24)
         self.events.reset_robot.params["pose_range"]["z"] = (0.10, 0.18)
         self.viewer.eye = (4.0, 4.0, 2.2)
-        self.terminations.base_height.params["minimum_height"] = -0.05
+        # On rough terrain, world-height thresholds are brittle. Use orientation as the main failure signal.
+        self.terminations.base_height.params["minimum_height"] = -1.0
+        self.terminations.bad_orientation.params["limit_angle"] = 1.35
 
 
 @configclass
@@ -398,4 +400,5 @@ class WheelLegSlopeEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.22)
         self.events.reset_robot.params["pose_range"]["z"] = (0.08, 0.14)
         self.viewer.eye = (4.0, 4.0, 2.0)
-        self.terminations.base_height.params["minimum_height"] = -0.03
+        self.terminations.base_height.params["minimum_height"] = -1.0
+        self.terminations.bad_orientation.params["limit_angle"] = 1.35

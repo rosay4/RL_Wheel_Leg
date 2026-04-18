@@ -161,6 +161,49 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
 
 
 @configclass
+class WheelLegMixedSceneCfg(InteractiveSceneCfg):
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=False,
+            size=(6.0, 6.0),
+            border_width=8.0,
+            num_rows=8,
+            num_cols=8,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.25, 0.8),
+            sub_terrains={
+                "rough_grid": MeshRandomGridTerrainCfg(
+                    proportion=0.45,
+                    grid_width=0.35,
+                    grid_height_range=(0.0, 0.10),
+                    platform_width=1.4,
+                ),
+                "slope_up": HfPyramidSlopedTerrainCfg(
+                    proportion=0.30,
+                    slope_range=(0.10, 0.28),
+                    platform_width=1.4,
+                ),
+                "slope_down": HfInvertedPyramidSlopedTerrainCfg(
+                    proportion=0.25,
+                    slope_range=(0.08, 0.24),
+                    platform_width=1.4,
+                ),
+            },
+        ),
+    )
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+    )
+
+
+@configclass
 class CommandsCfg:
     base_velocity = mdp.UniformVelocityCommandCfg(
         asset_name="robot",
@@ -171,8 +214,8 @@ class CommandsCfg:
         debug_vis=False,
         ranges=mdp.UniformVelocityCommandCfg.Ranges(
             lin_vel_x=(0.0, 0.0),
-            lin_vel_y=(-1.0, 1.2),
-            ang_vel_z=(-1.2, 1.2),
+            lin_vel_y=(-1.2, 1.4),
+            ang_vel_z=(-1.4, 1.4),
         ),
     )
 
@@ -400,5 +443,18 @@ class WheelLegSlopeEnvCfg(WheelLegEnvCfg):
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.22)
         self.events.reset_robot.params["pose_range"]["z"] = (0.08, 0.14)
         self.viewer.eye = (4.0, 4.0, 2.0)
+        self.terminations.base_height.params["minimum_height"] = -1.0
+        self.terminations.bad_orientation.params["limit_angle"] = 1.35
+
+
+@configclass
+class WheelLegMixedEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegMixedSceneCfg = WheelLegMixedSceneCfg(num_envs=4096, env_spacing=6.0)
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.24)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.10, 0.18)
+        self.viewer.eye = (4.5, 4.5, 2.4)
         self.terminations.base_height.params["minimum_height"] = -1.0
         self.terminations.bad_orientation.params["limit_angle"] = 1.35

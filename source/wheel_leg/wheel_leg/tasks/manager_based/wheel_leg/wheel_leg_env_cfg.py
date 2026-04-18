@@ -224,7 +224,7 @@ class WheelLegUnstructuredSceneCfg(InteractiveSceneCfg):
             sub_terrains={
                 "rough_grid": MeshRandomGridTerrainCfg(
                     proportion=0.30,
-                    grid_width=0.30,
+                    grid_width=0.20,
                     grid_height_range=(0.0, 0.04),
                     platform_width=1.0,
                 ),

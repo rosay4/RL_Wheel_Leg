@@ -104,7 +104,7 @@ import wheel_leg.tasks  # noqa: F401
 class Se2KeyboardTeleop:
     """Simple SE(2) keyboard controller for velocity commands."""
 
-    def __init__(self, vy_scale: float = 0.6, wz_scale: float = 1.0):
+    def __init__(self, vy_scale: float = 1.0, wz_scale: float = 1.2):
         import carb
         import omni.appwindow
 
@@ -263,7 +263,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
     teleop_command = None
     robot = env.unwrapped.scene["robot"] if args_cli.debug_base_frame else None
     if args_cli.keyboard:
-        teleop = Se2KeyboardTeleop(vy_scale=0.6, wz_scale=1.0)
+        teleop = Se2KeyboardTeleop(vy_scale=1.0, wz_scale=1.2)
         teleop_command = env.unwrapped.command_manager.get_command("base_velocity")
         print(teleop)
         if env.unwrapped.num_envs != 1:

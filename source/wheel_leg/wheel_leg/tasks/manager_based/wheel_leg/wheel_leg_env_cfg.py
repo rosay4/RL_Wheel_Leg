@@ -111,7 +111,7 @@ class WheelLegRoughSceneCfg(InteractiveSceneCfg):
                     proportion=1.0,
                     grid_width=0.35,
                     grid_height_range=(0.0, 0.08),
-                    platform_width=1.4,
+                    platform_width=1.0,
                 ),
             },
         ),

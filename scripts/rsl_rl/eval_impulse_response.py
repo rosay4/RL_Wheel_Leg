@@ -157,7 +157,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             env_ids=env_ids,
             is_global=args_cli.impulse_frame == "global",
         )
-        with torch.inference_mode():
+        with torch.no_grad():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
 
@@ -182,7 +182,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
             is_global=args_cli.impulse_frame == "global",
         )
 
-        with torch.inference_mode():
+        with torch.no_grad():
             actions = policy(obs)
             obs, _, _, _ = env.step(actions)
 

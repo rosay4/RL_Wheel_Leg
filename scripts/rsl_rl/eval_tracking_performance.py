@@ -122,7 +122,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
                 command_buf[:, :3] = torch.tensor(
                     [[0.0, vy_cmd, wz_cmd]], dtype=command_buf.dtype, device=command_buf.device
                 )
-                with torch.inference_mode():
+                with torch.no_grad():
                     actions = policy(obs)
                     obs, _, _, _ = env.step(actions)
 
@@ -134,7 +134,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
                 command_buf[:, :3] = torch.tensor(
                     [[0.0, vy_cmd, wz_cmd]], dtype=command_buf.dtype, device=command_buf.device
                 )
-                with torch.inference_mode():
+                with torch.no_grad():
                     actions = policy(obs)
                     obs, _, _, _ = env.step(actions)
 

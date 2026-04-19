@@ -145,12 +145,12 @@ class WheelLegSlopeSceneCfg(InteractiveSceneCfg):
                 "slope_up": HfPyramidSlopedTerrainCfg(
                     proportion=0.5,
                     slope_range=(0.10, 0.26),
-                    platform_width=1.4,
+                    platform_width=0.6,
                 ),
                 "slope_down": HfInvertedPyramidSlopedTerrainCfg(
                     proportion=0.5,
                     slope_range=(0.08, 0.22),
-                    platform_width=1.4,
+                    platform_width=0.6,
                 ),
             },
         ),

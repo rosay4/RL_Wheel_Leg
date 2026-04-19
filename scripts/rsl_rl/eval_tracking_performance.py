@@ -36,6 +36,12 @@ parser.add_argument(
 parser.add_argument("--settle-steps", type=int, default=120, help="Warm-up steps before statistics are collected.")
 parser.add_argument("--record-steps", type=int, default=240, help="Number of steps used to compute metrics.")
 parser.add_argument(
+    "--print-progress",
+    action="store_true",
+    default=False,
+    help="Print progress for each evaluated command pair.",
+)
+parser.add_argument(
     "--output-csv",
     type=str,
     default=None,
@@ -116,6 +122,8 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     for vy_cmd in args_cli.vy_list:
         for wz_cmd in args_cli.wz_list:
+            if args_cli.print_progress:
+                print(f"[INFO] Evaluating command pair vy={vy_cmd:+.2f}, wz={wz_cmd:+.2f}")
             obs, _ = env.reset()
             # settle
             for _ in range(args_cli.settle_steps):

@@ -529,3 +529,83 @@ class WheelLegUnstructuredEnvCfg(WheelLegEnvCfg):
         self.viewer.eye = (5.0, 5.0, 2.6)
         self.terminations.base_height.params["minimum_height"] = -1.0
         self.terminations.bad_orientation.params["limit_angle"] = 1.40
+
+# ==============================================================================
+# 评估专用环境 (Evaluation Environments)
+# 确保 Curriculum=False，地形全被单一障碍覆盖，方便测量跨越能力
+# ==============================================================================
+
+@configclass
+class WheelLegEvalStairsSceneCfg(WheelLegSceneCfg):
+    """纯台阶评估场景"""
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=False, # 必须关闭
+            size=(8.0, 8.0),  # 足够长以供跨越
+            border_width=2.0,
+            num_rows=2,
+            num_cols=2,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.5, 0.8), # 固定特定难度（台阶高度）
+            sub_terrains={
+                "stairs": HfPyramidStairsTerrainCfg(
+                    proportion=1.0, # 100% 都是台阶
+                    step_height_range=(0.08, 0.12), # 根据你的机器人能力设定
+                    step_width=0.35,
+                    platform_width=1.0,
+                ),
+            },
+        ),
+    )
+
+@configclass
+class WheelLegEvalStairsEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegEvalStairsSceneCfg = WheelLegEvalStairsSceneCfg(num_envs=1, env_spacing=4.0)
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.26)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
+        self.terminations.time_out.time_out = True # 允许超时
+        self.episode_length_s = 20.0 # 给足过台阶的时间
+
+@configclass
+class WheelLegEvalRoughSceneCfg(WheelLegSceneCfg):
+    """纯崎岖地形评估场景"""
+    terrain = TerrainImporterCfg(
+        prim_path="/World/ground",
+        terrain_type="generator",
+        terrain_generator=TerrainGeneratorCfg(
+            curriculum=False,
+            size=(8.0, 8.0),
+            border_width=2.0,
+            num_rows=2,
+            num_cols=2,
+            color_scheme="height",
+            horizontal_scale=0.1,
+            vertical_scale=0.005,
+            slope_threshold=0.75,
+            difficulty_range=(0.6, 1.0), # 设定难度
+            sub_terrains={
+                "rough_grid": MeshRandomGridTerrainCfg(
+                    proportion=1.0, # 100% 崎岖/乱石路面
+                    grid_width=0.35,
+                    grid_height_range=(0.02, 0.08),
+                    platform_width=1.0,
+                ),
+            },
+        ),
+    )
+
+@configclass
+class WheelLegEvalRoughEnvCfg(WheelLegEnvCfg):
+    scene: WheelLegEvalRoughSceneCfg = WheelLegEvalRoughSceneCfg(num_envs=1, env_spacing=4.0)
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.26)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
+        self.episode_length_s = 15.0 # 固定时间窗，看能走多远

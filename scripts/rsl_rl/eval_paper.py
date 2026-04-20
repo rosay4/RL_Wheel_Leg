@@ -38,7 +38,7 @@ from isaaclab.utils.assets import retrieve_file_path
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper
 from isaaclab.utils.math import euler_xyz_from_quat
 
-import isaaclab_tasks  # noqa: F401
+import wheel_leg.tasks  # noqa: F401
 from isaaclab_tasks.utils import get_checkpoint_path
 from isaaclab_tasks.utils.hydra import hydra_task_config
 

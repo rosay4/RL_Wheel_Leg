@@ -551,11 +551,11 @@ class WheelLegEvalStairsSceneCfg(WheelLegSceneCfg):
             horizontal_scale=0.1,
             vertical_scale=0.005,
             slope_threshold=0.75,
-            difficulty_range=(0.5, 0.8), # 固定特定难度（台阶高度）
+            difficulty_range=(0.2, 0.5), # 固定特定难度（台阶高度）
             sub_terrains={
                 "stairs": HfPyramidStairsTerrainCfg(
                     proportion=1.0, # 100% 都是台阶
-                    step_height_range=(0.08, 0.12), # 根据你的机器人能力设定
+                    step_height_range=(0.02, 0.05), # 根据你的机器人能力设定
                     step_width=0.35,
                     platform_width=1.0,
                 ),
@@ -594,7 +594,7 @@ class WheelLegEvalRoughSceneCfg(WheelLegSceneCfg):
                 "rough_grid": MeshRandomGridTerrainCfg(
                     proportion=1.0, # 100% 崎岖/乱石路面
                     grid_width=0.35,
-                    grid_height_range=(0.02, 0.08),
+                    grid_height_range=(0.02, 0.06),
                     platform_width=1.0,
                 ),
             },

@@ -22,8 +22,27 @@ def main():
 
     # 论文级画图风格设置
     sns.set_theme(style="whitegrid", context="paper", font_scale=1.5)
-    # 支持中文显示：优先使用微软雅黑，如果没有则使用黑体
-    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'sans-serif']
+    
+    # 更加健壮的中文支持逻辑
+    import matplotlib.font_manager as fm
+    # 常见的候选字体名 (覆盖 Windows, Linux, Mac)
+    chinese_font_candidates = ['Microsoft YaHei', 'SimHei', 'SimSun', 'Songti SC', 'STHeiti', 'Arial Unicode MS']
+    found_font = None
+    
+    # 扫描系统中可用的字体名
+    installed_fonts = [f.name for f in fm.fontManager.ttflist]
+    for font in chinese_font_candidates:
+        if font in installed_fonts:
+            found_font = font
+            break
+    
+    if found_font:
+        plt.rcParams['font.sans-serif'] = [found_font, 'sans-serif']
+        print(f"[INFO] Using font: {found_font}")
+    else:
+        print("[WARNING] No common Chinese font found. Titles might not display correctly.")
+        plt.rcParams['font.sans-serif'] = ['sans-serif']
+
     plt.rcParams['axes.unicode_minus'] = False
     
     # 寻找名字里带有左右腿特征的关节

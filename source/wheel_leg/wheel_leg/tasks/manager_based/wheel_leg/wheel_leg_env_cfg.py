@@ -603,7 +603,6 @@ class WheelLegEvalRoughSceneCfg(InteractiveSceneCfg):
                     noise_range=(0.03, 0.06),  # 山丘/坑洼的高低差范围（可根据机器人能力调整）
                     noise_step=0.02,
                     downsampled_scale=0.15,    # 【核心参数】通过降采样实现高斯平滑，数值越大越平缓
-                    platform_width=1.0,        # 初始平地大小
                 ),
             },
         ),
@@ -619,6 +618,7 @@ class WheelLegEvalRoughEnvCfg(WheelLegEnvCfg):
     scene: WheelLegEvalRoughSceneCfg = WheelLegEvalRoughSceneCfg(num_envs=1, env_spacing=4.0)
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.scene.robot.init_state.pos = (0.0, 0.0, 0.26)
-        self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.56)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.45, 0.55)
         self.episode_length_s = 15.0 # 固定时间窗，看能走多远
+        self.terminations.time_out.time_out = True

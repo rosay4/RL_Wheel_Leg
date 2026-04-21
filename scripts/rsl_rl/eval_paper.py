@@ -82,6 +82,7 @@ def main(env_cfg, agent_cfg):
     command_buf = env.unwrapped.command_manager.get_command("base_velocity")
     
     trial_rows =[]
+    timeseries_rows = []
 
     for trial_idx in range(args_cli.num_trials):
         print(f"[INFO] Evaluating Trial {trial_idx + 1}/{args_cli.num_trials} [{args_cli.eval_mode} mode]")
@@ -132,8 +133,25 @@ def main(env_cfg, agent_cfg):
             # 记录姿态角用于平稳性分析
             quat_w = robot.data.root_quat_w[0:1]
             roll_rad, pitch_rad, _ = euler_xyz_from_quat(quat_w)
-            pitch_history.append(float(torch.rad2deg(pitch_rad)[0].item()))
-            roll_history.append(float(torch.rad2deg(roll_rad)[0].item()))
+            roll_deg = float(torch.rad2deg(roll_rad)[0].item())
+            pitch_deg = float(torch.rad2deg(pitch_rad)[0].item())
+            
+            pitch_history.append(pitch_deg)
+            roll_history.append(roll_deg)
+
+            # 【新增：针对第一个 Trial，逐帧记录机身与腿部数据用于画动态曲线】
+            if args_cli.eval_mode == "rough" and trial_idx == 0:
+                current_time = step_idx * env_cfg.sim.dt * env_cfg.decimation
+                step_data = {
+                    "time_s": current_time,
+                    "roll_deg": roll_deg,
+                    "pitch_deg": pitch_deg,
+                    "distance_y": distance_y,
+                }
+                # 遍历记录所有关节位置（方便画图脚本区分左右腿）
+                for j_idx, j_name in enumerate(robot.data.joint_names):
+                    step_data[f"joint_{j_name}"] = float(robot.data.joint_pos[0, j_idx].item())
+                timeseries_rows.append(step_data)
 
             # --- 模式 1：台阶测试逻辑 (Stairs) ---
             if args_cli.eval_mode == "stairs":
@@ -217,6 +235,15 @@ def main(env_cfg, agent_cfg):
         writer = csv.DictWriter(f, fieldnames=list(summary.keys()))
         writer.writeheader()
         writer.writerow(summary)
+
+    # 【新增：保存时序数据】
+    if args_cli.eval_mode == "rough" and len(timeseries_rows) > 0:
+        timeseries_csv = output_prefix.with_name(output_prefix.name + "_timeseries.csv")
+        with timeseries_csv.open("w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=list(timeseries_rows[0].keys()))
+            writer.writeheader()
+            writer.writerows(timeseries_rows)
+        print(f"[INFO] Traversal timeseries (Trial 0) exported to: {timeseries_csv}")
 
     env.close()
     print(f"[INFO] Traversal summary exported to: {summary_csv}")

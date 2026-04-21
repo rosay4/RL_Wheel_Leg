@@ -25,6 +25,7 @@ from isaaclab.terrains.height_field.hf_terrains_cfg import (
 from isaaclab.terrains.trimesh.mesh_terrains_cfg import MeshRandomGridTerrainCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.noise import AdditiveGaussianNoiseCfg
+from isaaclab.terrains.height_field.hf_terrains_cfg import HfRandomUniformTerrainCfg
 
 
 ROBOT_CFG = SceneEntityCfg("robot")
@@ -581,13 +582,13 @@ class WheelLegEvalStairsEnvCfg(WheelLegEnvCfg):
 
 @configclass
 class WheelLegEvalRoughSceneCfg(InteractiveSceneCfg):
-    """纯崎岖地形评估场景"""
+    """连续起伏丘陵/坑洼地形评估场景"""
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
         terrain_type="generator",
         terrain_generator=TerrainGeneratorCfg(
             curriculum=False,
-            size=(8.0, 8.0),
+            size=(10.0, 10.0),
             border_width=2.0,
             num_rows=2,
             num_cols=2,
@@ -595,13 +596,14 @@ class WheelLegEvalRoughSceneCfg(InteractiveSceneCfg):
             horizontal_scale=0.1,
             vertical_scale=0.005,
             slope_threshold=0.75,
-            difficulty_range=(0.6, 1.0), # 设定难度
+            difficulty_range=(0.5, 1.0),
             sub_terrains={
-                "rough_grid": MeshRandomGridTerrainCfg(
-                    proportion=1.0, # 100% 崎岖/乱石路面
-                    grid_width=0.35,
-                    grid_height_range=(0.02, 0.06),
-                    platform_width=1.0,
+                "rolling_hills": HfRandomUniformTerrainCfg(
+                    proportion=1.0,
+                    noise_range=(0.03, 0.06),  # 山丘/坑洼的高低差范围（可根据机器人能力调整）
+                    noise_step=0.02,
+                    downsampled_scale=0.15,    # 【核心参数】通过降采样实现高斯平滑，数值越大越平缓
+                    platform_width=1.0,        # 初始平地大小
                 ),
             },
         ),

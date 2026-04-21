@@ -619,6 +619,7 @@ class WheelLegEvalRoughEnvCfg(WheelLegEnvCfg):
     def __post_init__(self) -> None:
         super().__post_init__()
         self.scene.robot.init_state.pos = (0.0, 0.0, 0.16)
-        self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
+        self.events.reset_robot.params["pose_range"]["z"] = (0.00, 0.00)
         self.episode_length_s = 15.0 # 固定时间窗，看能走多远
         self.terminations.time_out.time_out = True
+        self.terminations.base_height.params["minimum_height"] = -1.0

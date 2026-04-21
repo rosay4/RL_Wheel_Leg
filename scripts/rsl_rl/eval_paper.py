@@ -86,6 +86,21 @@ def main(env_cfg, agent_cfg):
     for trial_idx in range(args_cli.num_trials):
         print(f"[INFO] Evaluating Trial {trial_idx + 1}/{args_cli.num_trials} [{args_cli.eval_mode} mode]")
         obs, _ = env.reset()
+
+        # --- 强制改变初始位置，让小车从楼梯底端开始 ---
+        env_ids = torch.tensor([0], device=env.unwrapped.device, dtype=torch.long)
+        root_pos_w = robot.data.root_pos_w[0:1].clone()
+        root_quat_w = robot.data.root_quat_w[0:1].clone()
+        # 把小车往 Y 轴负方向挪 2 米，这样它面前就是向上的台阶
+        root_pos_w[:, 1] -= 2.0  
+        root_pose = torch.cat([root_pos_w, root_quat_w], dim=-1)
+        root_vel = torch.zeros((1, 6), device=env.unwrapped.device)
+        robot.write_root_pose_to_sim(root_pose, env_ids=env_ids)
+        robot.write_root_velocity_to_sim(root_vel, env_ids=env_ids)
+        robot.reset(env_ids)
+        
+        # 重置位置后，必须刷新一次 obs！否则第一步接收到的是错误的传感器数据
+        obs, _ = env.get_observations()
         
         # Settle steps (预热)
         for _ in range(50):

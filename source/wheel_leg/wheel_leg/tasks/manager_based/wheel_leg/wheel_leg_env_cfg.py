@@ -536,7 +536,7 @@ class WheelLegUnstructuredEnvCfg(WheelLegEnvCfg):
 # ==============================================================================
 
 @configclass
-class WheelLegEvalStairsSceneCfg(WheelLegSceneCfg):
+class WheelLegEvalStairsSceneCfg(InteractiveSceneCfg):
     """纯台阶评估场景"""
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
@@ -562,6 +562,12 @@ class WheelLegEvalStairsSceneCfg(WheelLegSceneCfg):
             },
         ),
     )
+    # 必须手动加回机器人和灯光
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
+    )
 
 @configclass
 class WheelLegEvalStairsEnvCfg(WheelLegEnvCfg):
@@ -574,7 +580,7 @@ class WheelLegEvalStairsEnvCfg(WheelLegEnvCfg):
         self.episode_length_s = 20.0 # 给足过台阶的时间
 
 @configclass
-class WheelLegEvalRoughSceneCfg(WheelLegSceneCfg):
+class WheelLegEvalRoughSceneCfg(InteractiveSceneCfg):
     """纯崎岖地形评估场景"""
     terrain = TerrainImporterCfg(
         prim_path="/World/ground",
@@ -599,6 +605,11 @@ class WheelLegEvalRoughSceneCfg(WheelLegSceneCfg):
                 ),
             },
         ),
+    )
+    robot: ArticulationCfg = get_wheel_leg_robot_cfg().replace(prim_path="{ENV_REGEX_NS}/Robot")
+    dome_light = AssetBaseCfg(
+        prim_path="/World/DomeLight",
+        spawn=sim_utils.DomeLightCfg(color=(0.9, 0.9, 0.9), intensity=500.0),
     )
 
 @configclass

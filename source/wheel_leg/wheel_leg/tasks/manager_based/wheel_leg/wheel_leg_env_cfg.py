@@ -618,7 +618,7 @@ class WheelLegEvalRoughEnvCfg(WheelLegEnvCfg):
     scene: WheelLegEvalRoughSceneCfg = WheelLegEvalRoughSceneCfg(num_envs=1, env_spacing=4.0)
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.scene.robot.init_state.pos = (0.0, 0.0, 0.26)
+        self.scene.robot.init_state.pos = (0.0, 0.0, 0.16)
         self.events.reset_robot.params["pose_range"]["z"] = (0.12, 0.20)
         self.episode_length_s = 15.0 # 固定时间窗，看能走多远
         self.terminations.time_out.time_out = True

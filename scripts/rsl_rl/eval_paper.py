@@ -118,29 +118,33 @@ def main(env_cfg, agent_cfg):
         pitch_history = []
         roll_history =[]
 
+        # 【新增】：用于保存 env.step() 之前的真实物理状态，防止触发 reset 后数据丢失
+        last_distance_y = 0.0
+        last_pitch_deg = 0.0
+        last_roll_deg = 0.0
+        last_z_height = 0.0
+
         for step_idx in range(args_cli.record_steps):
-            # 持续下发指令
-            command_buf[:, :3] = torch.tensor(
-                [[0.0, args_cli.command_vy, 0.0]], dtype=command_buf.dtype, device=command_buf.device
-            )
-            with torch.no_grad():
-                actions = policy(obs)
-                obs, _, terminated, _ = env.step(actions)
-            
-            # 获取当前状态
+            # --- 1. 获取动作【前】的真实状态（此时绝不会是 reset 后的虚假状态） ---
             current_y = float(robot.data.root_pos_w[0, 1].item())
+            current_z = float(robot.data.root_pos_w[0, 2].item())
             distance_y = current_y - start_root_pos_y
             
-            # 记录姿态角用于平稳性分析
             quat_w = robot.data.root_quat_w[0:1]
             roll_rad, pitch_rad, _ = euler_xyz_from_quat(quat_w)
             roll_deg = float(torch.rad2deg(roll_rad)[0].item())
             pitch_deg = float(torch.rad2deg(pitch_rad)[0].item())
+
+            # 备份到 last 变量
+            last_distance_y = distance_y
+            last_pitch_deg = pitch_deg
+            last_roll_deg = roll_deg
+            last_z_height = current_z
             
             pitch_history.append(pitch_deg)
             roll_history.append(roll_deg)
 
-            # 【新增：针对第一个 Trial，逐帧记录机身与腿部数据用于画动态曲线】
+            # --- 2. 记录时序数据 (仅限于 Rough 第一轮) ---
             if args_cli.eval_mode == "rough" and trial_idx == 0:
                 current_time = step_idx * env_cfg.sim.dt * env_cfg.decimation
                 step_data = {
@@ -149,31 +153,63 @@ def main(env_cfg, agent_cfg):
                     "pitch_deg": pitch_deg,
                     "distance_y": distance_y,
                 }
-                # 遍历记录所有关节位置（方便画图脚本区分左右腿）
                 for j_idx, j_name in enumerate(robot.data.joint_names):
                     step_data[f"joint_{j_name}"] = float(robot.data.joint_pos[0, j_idx].item())
                 timeseries_rows.append(step_data)
+
+            # --- 3. 持续下发指令并执行 Step ---
+            command_buf[:, :3] = torch.tensor(
+                [[0.0, args_cli.command_vy, 0.0]], dtype=command_buf.dtype, device=command_buf.device
+            )
+            with torch.no_grad():
+                actions = policy(obs)
+                # 【注意】：必须接收 extras 字典，里面包含了 timeout 等内部信息
+                obs, _, terminated, extras = env.step(actions)
+            
+            # ==========================================
+            # 内部函数：基于摔倒前的一瞬间状态，诊断死因
+            # ==========================================
+            def get_termination_reason():
+                if "time_outs" in extras and extras["time_outs"][0].item():
+                    return "⏱️ Time Out (Reached Max Steps)"
+                # 如果 Pitch/Roll 大于 ~70度，通常是翻车
+                if abs(last_pitch_deg) > 70.0 or abs(last_roll_deg) > 70.0:
+                    return f"🤸 Bad Orientation (Pitch={last_pitch_deg:.1f}°, Roll={last_roll_deg:.1f}°)"
+                # 如果 Z 高度极低，通常是腿软底盘砸地
+                elif last_z_height < 0.12:  
+                    return f"💥 Base Crash / Height Too Low (Z={last_z_height:.3f}m)"
+                else:
+                    return f"⚠️ Joint Limits / Other (Pos or Vel exceeded limits)"
 
             # --- 模式 1：台阶测试逻辑 (Stairs) ---
             if args_cli.eval_mode == "stairs":
                 if distance_y >= args_cli.target_dist:
                     passed_target = True
                     terminated_step = step_idx
-                    break # 成功过关，提前结束
+                    print(f"      ✅ [Success] Crossed target distance {args_cli.target_dist}m at step {step_idx}.")
+                    break 
                 if terminated[0].item():
                     terminated_step = step_idx
-                    passed_target = False # 摔倒或发生限制
+                    passed_target = False 
+                    reason = get_termination_reason()
+                    print(f"      ❌ [Failed] Terminated at step {step_idx}. Reason: {reason}")
                     break
 
             # --- 模式 2：崎岖路面逻辑 (Rough) ---
             if args_cli.eval_mode == "rough":
                 if terminated[0].item():
                     terminated_step = step_idx
-                    break # 记录跌倒时刻
+                    reason = get_termination_reason()
+                    print(f"      ❌ [Failed] Terminated at step {step_idx}. Reason: {reason}")
+                    break 
+        
+        # 正常跑完全程没有摔倒（触发 Time Out）
+        if args_cli.eval_mode == "rough" and terminated_step is None:
+            print(f"      ✅ [Survived] Completed all {args_cli.record_steps} steps flawlessly.")
 
         # 结算当前 Trial 的数据
-        end_root_pos = robot.data.root_pos_w[0]
-        final_distance_y = float(end_root_pos[1].item() - start_root_pos_y)
+        # 【核心修正】：使用 last_distance_y 而不是 robot.data，确保获取的是摔倒前跑出的真实距离！
+        final_distance_y = last_distance_y
         
         pitch_arr = np.array(pitch_history)
         roll_arr = np.array(roll_history)

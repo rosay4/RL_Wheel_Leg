@@ -94,7 +94,6 @@ def main(env_cfg, agent_cfg):
         root_quat_w = robot.data.root_quat_w[0:1].clone()
         # 把小车往 Y 轴负方向挪 2 米，这样它面前就是向上的台阶
         root_pos_w[:, 1] -= 2.0  
-        root_pos_w[:, 2] = 0.3 
         root_pose = torch.cat([root_pos_w, root_quat_w], dim=-1)
         root_vel = torch.zeros((1, 6), device=env.unwrapped.device)
         robot.write_root_pose_to_sim(root_pose, env_ids=env_ids)

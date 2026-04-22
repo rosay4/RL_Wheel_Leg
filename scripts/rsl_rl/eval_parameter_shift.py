@@ -216,6 +216,7 @@ def _termination_reason(env) -> str:
 @hydra_task_config(args_cli.task, "rsl_rl_cfg_entry_point")
 def main(base_env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agent_cfg: RslRlOnPolicyRunnerCfg):
     agent_cfg = cli_args.update_rsl_rl_cfg(agent_cfg, args_cli)
+    base_env_cfg.seed = args_cli.seed if args_cli.seed is not None else agent_cfg.seed
 
     log_root_path = os.path.join("logs", "rsl_rl", agent_cfg.experiment_name)
     log_root_path = os.path.abspath(log_root_path)
@@ -235,11 +236,16 @@ def main(base_env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
     for shift_name in shift_names:
         print(f"[INFO] Shift set: {shift_name}")
         env_cfg = _build_shifted_env_cfg(base_env_cfg, shift_name)
+        if env_cfg.seed is None:
+            env_cfg.seed = agent_cfg.seed
+
+        print(f"[INFO] Creating environment for shift '{shift_name}' (this may take a while)...")
 
         env = gym.make(args_cli.task, cfg=env_cfg)
         if isinstance(env.unwrapped, DirectMARLEnv):
             env = multi_agent_to_single_agent(env)
         env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+        print(f"[INFO] Environment for shift '{shift_name}' is ready.")
 
         ppo_runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
         ppo_runner.load(resume_path)
@@ -339,6 +345,7 @@ def main(base_env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
             )
 
         env.close()
+        print(f"[INFO] Finished shift '{shift_name}'.")
 
     output_csv = _resolve_output_csv(run_dir)
     output_csv.parent.mkdir(parents=True, exist_ok=True)

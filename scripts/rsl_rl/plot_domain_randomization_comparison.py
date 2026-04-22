@@ -10,14 +10,14 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
-parser = argparse.ArgumentParser(description="Plot domain-randomization comparison figures for experiment 5.")
+parser = argparse.ArgumentParser(description="绘制实验五的域随机化对比图。")
 parser.add_argument(
     "--main-entry",
     action="append",
     nargs=2,
     metavar=("MODEL_LABEL", "CSV_PATH"),
     required=True,
-    help="Per-trial parameter-shift CSV exported by eval_parameter_shift.py. Repeat for multiple models.",
+    help="由 eval_parameter_shift.py 导出的单次 trial 主 CSV，可重复填写多个模型。",
 )
 parser.add_argument(
     "--phase-entry",
@@ -25,27 +25,36 @@ parser.add_argument(
     nargs=2,
     metavar=("MODEL_LABEL", "CSV_PATH"),
     default=[],
-    help="Optional phase CSV exported by eval_parameter_shift.py with --export-phase-csv.",
+    help="可选，相位图 CSV；由 eval_parameter_shift.py 配合 --export-phase-csv 导出。",
 )
 parser.add_argument(
     "--phase-shift-set",
     type=str,
     default=None,
-    help="Shift set to use for the phase portrait. Defaults to the first common shift across phase CSVs.",
+    help="相位图使用的参数偏移场景；默认自动选择各 CSV 共有的第一个场景。",
 )
 parser.add_argument(
     "--phase-axis",
     type=str,
     choices=("pitch", "roll"),
     default="pitch",
-    help="State pair used for the phase portrait.",
+    help="相位图使用俯仰相位或横滚相位。",
 )
-parser.add_argument("--output-dir", type=str, default=None, help="Directory for aggregated CSV and plots.")
-parser.add_argument("--title-prefix", type=str, default="Domain Randomization", help="Figure title prefix.")
+parser.add_argument("--output-dir", type=str, default=None, help="汇总 CSV 与图片的输出目录。")
+parser.add_argument("--title-prefix", type=str, default="域随机化消融实验", help="图标题前缀。")
 args = parser.parse_args()
 
 
 BAR_COLORS = ["#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd", "#8c564b"]
+SHIFT_LABELS = {
+    "nominal": "标称参数",
+    "low_friction": "低摩擦",
+    "high_friction": "高摩擦",
+    "mass_plus": "质量增加",
+    "mass_minus": "质量减小",
+    "actuator_weak": "驱动削弱",
+    "actuator_strong": "驱动增强",
+}
 
 
 def _resolve_output_dir(first_csv: Path) -> Path:
@@ -99,13 +108,14 @@ def _aggregate_main_csvs() -> tuple[pd.DataFrame, Path]:
 
 def _plot_grouped_bars(df: pd.DataFrame, metric_name: str, ylabel: str, out_dir: Path):
     pivot = df.pivot(index="shift_set", columns="model_label", values=metric_name)
+    pivot = pivot.rename(index=lambda idx: SHIFT_LABELS.get(idx, idx))
     fig, ax = plt.subplots(figsize=(8.5, 4.8))
     pivot.plot(kind="bar", ax=ax, color=BAR_COLORS[: len(pivot.columns)], width=0.8)
-    ax.set_xlabel("Shift Set")
+    ax.set_xlabel("参数偏移场景")
     ax.set_ylabel(ylabel)
     ax.set_title(f"{args.title_prefix}: {ylabel}")
     ax.grid(True, alpha=0.3, axis="y")
-    ax.legend(title="Model")
+    ax.legend(title="模型")
     fig.tight_layout()
     fig.savefig(out_dir / f"domain_randomization_{metric_name}.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -157,12 +167,13 @@ def _plot_phase_portrait(out_dir: Path):
             color=BAR_COLORS[idx % len(BAR_COLORS)],
         )
 
-    axis_label = "Pitch" if args.phase_axis == "pitch" else "Roll"
-    ax.set_xlabel(f"{axis_label} Angle (deg)")
-    ax.set_ylabel(f"{axis_label} Rate (rad/s)")
-    ax.set_title(f"{args.title_prefix}: {axis_label} Phase Portrait ({selected_shift})")
+    axis_label = "俯仰" if args.phase_axis == "pitch" else "横滚"
+    shift_label = SHIFT_LABELS.get(selected_shift, selected_shift)
+    ax.set_xlabel(f"{axis_label}角 (deg)")
+    ax.set_ylabel(f"{axis_label}角速度 (rad/s)")
+    ax.set_title(f"{args.title_prefix}: {axis_label}相位图（{shift_label}）")
     ax.grid(True, alpha=0.3)
-    ax.legend(title="Model")
+    ax.legend(title="模型")
     fig.tight_layout()
     fig.savefig(
         out_dir / f"domain_randomization_{args.phase_axis}_phase_{selected_shift}.png",
@@ -179,13 +190,13 @@ def main():
     summary_csv = out_dir / "domain_randomization_comparison.csv"
     summary_df.to_csv(summary_csv, index=False)
 
-    _plot_grouped_bars(summary_df, "survival_rate", "Survival Rate", out_dir)
-    _plot_grouped_bars(summary_df, "mean_survival_time_s", "Mean Survival Time (s)", out_dir)
-    _plot_grouped_bars(summary_df, "mean_rmse_vy", "Mean RMSE Vy", out_dir)
-    _plot_grouped_bars(summary_df, "mean_abs_pitch_deg", "Mean |Pitch| (deg)", out_dir)
+    _plot_grouped_bars(summary_df, "survival_rate", "存活率", out_dir)
+    _plot_grouped_bars(summary_df, "mean_survival_time_s", "平均存活时间 (s)", out_dir)
+    _plot_grouped_bars(summary_df, "mean_rmse_vy", "平均纵向速度跟踪误差", out_dir)
+    _plot_grouped_bars(summary_df, "mean_abs_pitch_deg", "平均俯仰角绝对值 (deg)", out_dir)
     _plot_phase_portrait(out_dir)
 
-    print(f"[INFO] Domain-randomization comparison exported to: {out_dir}")
+    print(f"[INFO] 域随机化对比图已导出到: {out_dir}")
 
 
 if __name__ == "__main__":

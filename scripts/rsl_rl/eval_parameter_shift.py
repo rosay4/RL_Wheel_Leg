@@ -52,7 +52,13 @@ parser.add_argument(
     "--output-csv",
     type=str,
     default=None,
-    help="Optional absolute/relative path for the main per-trial CSV. Defaults inside the run folder.",
+    help="Optional absolute/relative path for the main per-trial CSV. Can be reused across multiple runs.",
+)
+parser.add_argument(
+    "--append-output",
+    action="store_true",
+    default=False,
+    help="Append results to an existing main CSV instead of overwriting it.",
 )
 parser.add_argument(
     "--export-phase-csv",
@@ -103,7 +109,7 @@ from isaaclab_tasks.utils.hydra import hydra_task_config
 import wheel_leg.tasks  # noqa: F401
 
 
-PAPER_SHIFT_SEQUENCE = ["nominal", "low_friction", "mass_plus", "actuator_weak"]
+DEFAULT_SHIFT_SET = "nominal"
 
 
 @dataclass(frozen=True)
@@ -130,7 +136,10 @@ def _resolve_output_csv(run_dir: str) -> Path:
         return Path(args_cli.output_csv).expanduser().resolve()
     out_dir = Path(run_dir) / "analysis"
     out_dir.mkdir(parents=True, exist_ok=True)
-    return out_dir / f"parameter_shift_{args_cli.model_name}.csv"
+    if args_cli.append_output:
+        return out_dir / f"parameter_shift_{args_cli.model_name}.csv"
+    shift_name = _get_shift_names()[0]
+    return out_dir / f"parameter_shift_{args_cli.model_name}_{shift_name}.csv"
 
 
 def _resolve_phase_csv(run_dir: str) -> Path:
@@ -138,13 +147,14 @@ def _resolve_phase_csv(run_dir: str) -> Path:
         return Path(args_cli.phase_csv).expanduser().resolve()
     out_dir = Path(run_dir) / "analysis"
     out_dir.mkdir(parents=True, exist_ok=True)
-    return out_dir / f"parameter_shift_phase_{args_cli.model_name}.csv"
+    shift_name = _get_shift_names()[0]
+    return out_dir / f"parameter_shift_phase_{args_cli.model_name}_{shift_name}.csv"
 
 
 def _get_shift_names() -> list[str]:
     if args_cli.shift_set:
-        return list(args_cli.shift_set)
-    return list(PAPER_SHIFT_SEQUENCE)
+        return [args_cli.shift_set[0]]
+    return [DEFAULT_SHIFT_SET]
 
 
 def _build_shifted_env_cfg(base_env_cfg, shift_name: str):
@@ -230,128 +240,136 @@ def main(base_env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg,
     phase_rows: list[dict[str, float | str]] = []
 
     shift_names = _get_shift_names()
-    print(f"[INFO] Evaluating shift sets: {', '.join(shift_names)}")
+    shift_name = shift_names[0]
+    if args_cli.shift_set and len(args_cli.shift_set) > 1:
+        print(
+            "[WARN] IsaacLab 在同一进程内连续切换多组参数偏移环境不稳定；"
+            f"本次仅执行第一个 shift_set: {shift_name}"
+        )
+    print(f"[INFO] Evaluating shift set: {shift_name}")
     print(f"[INFO] Loading model checkpoint from: {resume_path}")
 
-    for shift_name in shift_names:
-        print(f"[INFO] Shift set: {shift_name}")
-        env_cfg = _build_shifted_env_cfg(base_env_cfg, shift_name)
-        if env_cfg.seed is None:
-            env_cfg.seed = agent_cfg.seed
+    env_cfg = _build_shifted_env_cfg(base_env_cfg, shift_name)
+    if env_cfg.seed is None:
+        env_cfg.seed = agent_cfg.seed
 
-        print(f"[INFO] Creating environment for shift '{shift_name}' (this may take a while)...")
+    print(f"[INFO] Creating environment for shift '{shift_name}' (this may take a while)...")
 
-        env = gym.make(args_cli.task, cfg=env_cfg)
-        if isinstance(env.unwrapped, DirectMARLEnv):
-            env = multi_agent_to_single_agent(env)
-        env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
-        print(f"[INFO] Environment for shift '{shift_name}' is ready.")
+    env = gym.make(args_cli.task, cfg=env_cfg)
+    if isinstance(env.unwrapped, DirectMARLEnv):
+        env = multi_agent_to_single_agent(env)
+    env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+    print(f"[INFO] Environment for shift '{shift_name}' is ready.")
 
-        ppo_runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
-        ppo_runner.load(resume_path)
-        policy = ppo_runner.get_inference_policy(device=env.unwrapped.device)
+    ppo_runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
+    ppo_runner.load(resume_path)
+    policy = ppo_runner.get_inference_policy(device=env.unwrapped.device)
 
-        robot = env.unwrapped.scene["robot"]
-        command_buf = env.unwrapped.command_manager.get_command("base_velocity")
-        step_dt = env.unwrapped.step_dt
+    robot = env.unwrapped.scene["robot"]
+    command_buf = env.unwrapped.command_manager.get_command("base_velocity")
+    step_dt = env.unwrapped.step_dt
 
-        for trial_idx in range(args_cli.num_trials):
-            print(f"[INFO]   Trial {trial_idx + 1}/{args_cli.num_trials}")
-            obs, _ = env.reset()
+    for trial_idx in range(args_cli.num_trials):
+        print(f"[INFO]   Trial {trial_idx + 1}/{args_cli.num_trials}")
+        obs, _ = env.reset()
 
-            for _ in range(args_cli.settle_steps):
-                command_buf[:, :3] = torch.tensor(
-                    [[0.0, args_cli.command_vy, args_cli.command_wz]],
-                    dtype=command_buf.dtype,
-                    device=command_buf.device,
-                )
-                with torch.no_grad():
-                    actions = policy(obs)
-                    obs, _, _, _ = env.step(actions)
-
-            vy_err_hist = []
-            wz_err_hist = []
-            pitch_abs_hist = []
-            roll_abs_hist = []
-            termination_reason = "time_window_complete"
-            survival_steps = args_cli.record_steps
-
-            for step_idx in range(args_cli.record_steps):
-                command_buf[:, :3] = torch.tensor(
-                    [[0.0, args_cli.command_vy, args_cli.command_wz]],
-                    dtype=command_buf.dtype,
-                    device=command_buf.device,
-                )
-                with torch.no_grad():
-                    actions = policy(obs)
-                    obs, _, terminated, _ = env.step(actions)
-
-                root_lin_vel_b = getattr(robot.data, "root_lin_vel_b", None)
-                if root_lin_vel_b is None:
-                    root_lin_vel_b = getattr(robot.data, "root_com_lin_vel_b")
-                root_ang_vel_b = getattr(robot.data, "root_ang_vel_b", None)
-                if root_ang_vel_b is None:
-                    root_ang_vel_b = getattr(robot.data, "root_com_ang_vel_b")
-
-                quat_w = robot.data.root_quat_w[0:1]
-                roll_rad, pitch_rad, _ = euler_xyz_from_quat(quat_w)
-                vy_actual = float(root_lin_vel_b[0, 1].item())
-                wz_actual = float(root_ang_vel_b[0, 2].item())
-
-                vy_err_hist.append(args_cli.command_vy - vy_actual)
-                wz_err_hist.append(args_cli.command_wz - wz_actual)
-                pitch_abs_hist.append(abs(float(torch.rad2deg(pitch_rad)[0].item())))
-                roll_abs_hist.append(abs(float(torch.rad2deg(roll_rad)[0].item())))
-
-                if args_cli.export_phase_csv and trial_idx == 0:
-                    phase_rows.append(
-                        {
-                            "model_name": args_cli.model_name,
-                            "shift_set": shift_name,
-                            "trial_idx": float(trial_idx),
-                            "time_s": step_idx * step_dt,
-                            "pitch_deg": float(torch.rad2deg(pitch_rad)[0].item()),
-                            "pitch_rate_rad_s": float(root_ang_vel_b[0, 1].item()),
-                            "roll_deg": float(torch.rad2deg(roll_rad)[0].item()),
-                            "roll_rate_rad_s": float(root_ang_vel_b[0, 0].item()),
-                        }
-                    )
-
-                if terminated[0].item():
-                    survival_steps = step_idx + 1
-                    termination_reason = _termination_reason(env)
-                    break
-
-            vy_err = torch.tensor(vy_err_hist, dtype=torch.float32)
-            wz_err = torch.tensor(wz_err_hist, dtype=torch.float32)
-            trial_rows.append(
-                {
-                    "model_name": args_cli.model_name,
-                    "shift_set": shift_name,
-                    "trial_idx": float(trial_idx),
-                    "command_vy": float(args_cli.command_vy),
-                    "command_wz": float(args_cli.command_wz),
-                    "survived": 1.0 if survival_steps >= args_cli.record_steps else 0.0,
-                    "survival_steps": float(survival_steps),
-                    "survival_time_s": float(survival_steps * step_dt),
-                    "termination_reason": termination_reason,
-                    "rmse_vy": float(torch.sqrt(torch.mean(vy_err**2)).item()),
-                    "rmse_wz": float(torch.sqrt(torch.mean(wz_err**2)).item()),
-                    "mean_abs_pitch_deg": float(torch.tensor(pitch_abs_hist, dtype=torch.float32).mean().item()),
-                    "max_abs_pitch_deg": float(torch.tensor(pitch_abs_hist, dtype=torch.float32).max().item()),
-                    "mean_abs_roll_deg": float(torch.tensor(roll_abs_hist, dtype=torch.float32).mean().item()),
-                    "max_abs_roll_deg": float(torch.tensor(roll_abs_hist, dtype=torch.float32).max().item()),
-                }
+        for _ in range(args_cli.settle_steps):
+            command_buf[:, :3] = torch.tensor(
+                [[0.0, args_cli.command_vy, args_cli.command_wz]],
+                dtype=command_buf.dtype,
+                device=command_buf.device,
             )
+            with torch.no_grad():
+                actions = policy(obs)
+                obs, _, _, _ = env.step(actions)
 
-        env.close()
-        print(f"[INFO] Finished shift '{shift_name}'.")
+        vy_err_hist = []
+        wz_err_hist = []
+        pitch_abs_hist = []
+        roll_abs_hist = []
+        termination_reason = "time_window_complete"
+        survival_steps = args_cli.record_steps
+
+        for step_idx in range(args_cli.record_steps):
+            command_buf[:, :3] = torch.tensor(
+                [[0.0, args_cli.command_vy, args_cli.command_wz]],
+                dtype=command_buf.dtype,
+                device=command_buf.device,
+            )
+            with torch.no_grad():
+                actions = policy(obs)
+                obs, _, terminated, _ = env.step(actions)
+
+            root_lin_vel_b = getattr(robot.data, "root_lin_vel_b", None)
+            if root_lin_vel_b is None:
+                root_lin_vel_b = getattr(robot.data, "root_com_lin_vel_b")
+            root_ang_vel_b = getattr(robot.data, "root_ang_vel_b", None)
+            if root_ang_vel_b is None:
+                root_ang_vel_b = getattr(robot.data, "root_com_ang_vel_b")
+
+            quat_w = robot.data.root_quat_w[0:1]
+            roll_rad, pitch_rad, _ = euler_xyz_from_quat(quat_w)
+            vy_actual = float(root_lin_vel_b[0, 1].item())
+            wz_actual = float(root_ang_vel_b[0, 2].item())
+
+            vy_err_hist.append(args_cli.command_vy - vy_actual)
+            wz_err_hist.append(args_cli.command_wz - wz_actual)
+            pitch_abs_hist.append(abs(float(torch.rad2deg(pitch_rad)[0].item())))
+            roll_abs_hist.append(abs(float(torch.rad2deg(roll_rad)[0].item())))
+
+            if args_cli.export_phase_csv and trial_idx == 0:
+                phase_rows.append(
+                    {
+                        "model_name": args_cli.model_name,
+                        "shift_set": shift_name,
+                        "trial_idx": float(trial_idx),
+                        "time_s": step_idx * step_dt,
+                        "pitch_deg": float(torch.rad2deg(pitch_rad)[0].item()),
+                        "pitch_rate_rad_s": float(root_ang_vel_b[0, 1].item()),
+                        "roll_deg": float(torch.rad2deg(roll_rad)[0].item()),
+                        "roll_rate_rad_s": float(root_ang_vel_b[0, 0].item()),
+                    }
+                )
+
+            if terminated[0].item():
+                survival_steps = step_idx + 1
+                termination_reason = _termination_reason(env)
+                break
+
+        vy_err = torch.tensor(vy_err_hist, dtype=torch.float32)
+        wz_err = torch.tensor(wz_err_hist, dtype=torch.float32)
+        trial_rows.append(
+            {
+                "model_name": args_cli.model_name,
+                "shift_set": shift_name,
+                "trial_idx": float(trial_idx),
+                "command_vy": float(args_cli.command_vy),
+                "command_wz": float(args_cli.command_wz),
+                "survived": 1.0 if survival_steps >= args_cli.record_steps else 0.0,
+                "survival_steps": float(survival_steps),
+                "survival_time_s": float(survival_steps * step_dt),
+                "termination_reason": termination_reason,
+                "rmse_vy": float(torch.sqrt(torch.mean(vy_err**2)).item()),
+                "rmse_wz": float(torch.sqrt(torch.mean(wz_err**2)).item()),
+                "mean_abs_pitch_deg": float(torch.tensor(pitch_abs_hist, dtype=torch.float32).mean().item()),
+                "max_abs_pitch_deg": float(torch.tensor(pitch_abs_hist, dtype=torch.float32).max().item()),
+                "mean_abs_roll_deg": float(torch.tensor(roll_abs_hist, dtype=torch.float32).mean().item()),
+                "max_abs_roll_deg": float(torch.tensor(roll_abs_hist, dtype=torch.float32).max().item()),
+            }
+        )
+
+    env.close()
+    print(f"[INFO] Finished shift '{shift_name}'.")
 
     output_csv = _resolve_output_csv(run_dir)
     output_csv.parent.mkdir(parents=True, exist_ok=True)
-    with output_csv.open("w", newline="", encoding="utf-8") as f:
+    file_exists = output_csv.exists()
+    write_header = not (args_cli.append_output and file_exists)
+    write_mode = "a" if args_cli.append_output else "w"
+    with output_csv.open(write_mode, newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(trial_rows[0].keys()))
-        writer.writeheader()
+        if write_header:
+            writer.writeheader()
         writer.writerows(trial_rows)
     print(f"[INFO] Parameter-shift trial CSV exported to: {output_csv}")
 

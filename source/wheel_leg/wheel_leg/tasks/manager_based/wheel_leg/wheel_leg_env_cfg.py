@@ -519,6 +519,9 @@ class NoDrObservationsCfg(ObservationsCfg):
 
 @configclass
 class NoDrEventCfg(EventCfg):
+    robot_physics_material = None
+    add_base_mass = None
+    base_push = None
     reset_robot = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",

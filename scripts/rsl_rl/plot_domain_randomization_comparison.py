@@ -1,11 +1,12 @@
 # Copyright (c) 2022-2025, The Isaac Lab Project Developers
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Plot experiment-5 domain-randomization comparison figures."""
+"""绘制实验五的域随机化对比图。"""
 
 import argparse
 from pathlib import Path
 
+import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -17,7 +18,7 @@ parser.add_argument(
     nargs=2,
     metavar=("MODEL_LABEL", "CSV_PATH"),
     required=True,
-    help="由 eval_parameter_shift.py 导出的单次 trial 主 CSV，可重复填写多个模型。",
+    help="由 eval_parameter_shift.py 导出的主 trial CSV，可重复填写多个模型。",
 )
 parser.add_argument(
     "--phase-entry",
@@ -57,6 +58,25 @@ SHIFT_LABELS = {
 }
 
 
+def _setup_chinese_font():
+    plt.rcParams["axes.unicode_minus"] = False
+    available_fonts = {font.name for font in fm.fontManager.ttflist}
+    preferred_fonts = [
+        "Microsoft YaHei",
+        "SimHei",
+        "Noto Sans CJK SC",
+        "Source Han Sans SC",
+        "WenQuanYi Micro Hei",
+        "Arial Unicode MS",
+    ]
+    selected_fonts = [font_name for font_name in preferred_fonts if font_name in available_fonts]
+    if selected_fonts:
+        plt.rcParams["font.family"] = "sans-serif"
+        plt.rcParams["font.sans-serif"] = selected_fonts + ["DejaVu Sans"]
+    else:
+        print("[WARN] 未检测到常见中文字体，Matplotlib 可能仍会显示方框。")
+
+
 def _resolve_output_dir(first_csv: Path) -> Path:
     if args.output_dir:
         out_dir = Path(args.output_dir).expanduser().resolve()
@@ -87,7 +107,7 @@ def _aggregate_main_csvs() -> tuple[pd.DataFrame, Path]:
         }
         missing_cols = required_cols.difference(df.columns)
         if missing_cols:
-            raise KeyError(f"Missing columns in {csv_path}: {sorted(missing_cols)}")
+            raise KeyError(f"文件 {csv_path} 缺少字段: {sorted(missing_cols)}")
 
         grouped = df.groupby("shift_set", as_index=False).agg(
             survival_rate=("survived", "mean"),
@@ -110,12 +130,13 @@ def _plot_grouped_bars(df: pd.DataFrame, metric_name: str, ylabel: str, out_dir:
     pivot = df.pivot(index="shift_set", columns="model_label", values=metric_name)
     pivot = pivot.rename(index=lambda idx: SHIFT_LABELS.get(idx, idx))
     fig, ax = plt.subplots(figsize=(8.5, 4.8))
-    pivot.plot(kind="bar", ax=ax, color=BAR_COLORS[: len(pivot.columns)], width=0.8)
+    pivot.plot(kind="bar", ax=ax, color=BAR_COLORS[: len(pivot.columns)], width=0.8, rot=0)
     ax.set_xlabel("参数偏移场景")
     ax.set_ylabel(ylabel)
-    ax.set_title(f"{args.title_prefix}: {ylabel}")
+    ax.set_title(f"{args.title_prefix}：{ylabel}")
     ax.grid(True, alpha=0.3, axis="y")
     ax.legend(title="模型")
+    ax.tick_params(axis="x", labelrotation=0)
     fig.tight_layout()
     fig.savefig(out_dir / f"domain_randomization_{metric_name}.png", dpi=300, bbox_inches="tight")
     plt.close(fig)
@@ -131,7 +152,7 @@ def _select_phase_shift(phase_frames: list[tuple[str, pd.DataFrame]]) -> str:
         common_shifts = shifts if common_shifts is None else common_shifts.intersection(shifts)
 
     if not common_shifts:
-        raise ValueError("No common shift_set found across provided --phase-entry CSVs.")
+        raise ValueError("提供的相位图 CSV 中不存在共同的 shift_set。")
     return sorted(common_shifts)[0]
 
 
@@ -146,7 +167,7 @@ def _plot_phase_portrait(out_dir: Path):
         required_cols = {"shift_set", "pitch_deg", "pitch_rate_rad_s", "roll_deg", "roll_rate_rad_s"}
         missing_cols = required_cols.difference(frame.columns)
         if missing_cols:
-            raise KeyError(f"Missing columns in phase CSV {csv_path}: {sorted(missing_cols)}")
+            raise KeyError(f"相位图 CSV {csv_path} 缺少字段: {sorted(missing_cols)}")
         phase_frames.append((model_label, frame))
 
     selected_shift = _select_phase_shift(phase_frames)
@@ -171,7 +192,7 @@ def _plot_phase_portrait(out_dir: Path):
     shift_label = SHIFT_LABELS.get(selected_shift, selected_shift)
     ax.set_xlabel(f"{axis_label}角 (deg)")
     ax.set_ylabel(f"{axis_label}角速度 (rad/s)")
-    ax.set_title(f"{args.title_prefix}: {axis_label}相位图（{shift_label}）")
+    ax.set_title(f"{args.title_prefix}：{axis_label}相位图（{shift_label}）")
     ax.grid(True, alpha=0.3)
     ax.legend(title="模型")
     fig.tight_layout()
@@ -184,6 +205,7 @@ def _plot_phase_portrait(out_dir: Path):
 
 
 def main():
+    _setup_chinese_font()
     summary_df, first_csv = _aggregate_main_csvs()
     out_dir = _resolve_output_dir(first_csv)
 

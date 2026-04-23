@@ -122,12 +122,12 @@ class ShiftSpec:
 
 SHIFT_SPECS: dict[str, ShiftSpec] = {
     "nominal": ShiftSpec(),
-    "low_friction": ShiftSpec(friction=(0.35, 0.30)),
-    "high_friction": ShiftSpec(friction=(1.30, 1.10)),
-    "mass_plus": ShiftSpec(mass_delta=0.35),
-    "mass_minus": ShiftSpec(mass_delta=-0.20),
-    "actuator_weak": ShiftSpec(actuator_scale_mult=0.75, actuator_effort_mult=0.75),
-    "actuator_strong": ShiftSpec(actuator_scale_mult=1.15, actuator_effort_mult=1.15),
+    "low_friction": ShiftSpec(friction=(0.15, 0.10)),
+    "high_friction": ShiftSpec(friction=(1.50, 1.30)),
+    "mass_plus": ShiftSpec(mass_delta=0.80),
+    "mass_minus": ShiftSpec(mass_delta=-0.35),
+    "actuator_weak": ShiftSpec(actuator_scale_mult=0.50, actuator_effort_mult=0.50),
+    "actuator_strong": ShiftSpec(actuator_scale_mult=1.20, actuator_effort_mult=1.20),
 }
 
 

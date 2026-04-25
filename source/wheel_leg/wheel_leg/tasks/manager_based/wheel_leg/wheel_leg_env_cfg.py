@@ -440,6 +440,26 @@ class RewardsCfg:
 
 
 @configclass
+class NoEnergyPenaltyRewardsCfg(RewardsCfg):
+    action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=0.0)
+    wheel_vel_l2_penalty = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=0.0,
+        params={"asset_cfg": WHEEL_CFG},
+    )
+    joint_vel_l2 = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=0.0,
+        params={"asset_cfg": HIP_CFG},
+    )
+
+
+@configclass
+class HighPosturePenaltyRewardsCfg(RewardsCfg):
+    flat_orientation = RewTerm(func=mdp.flat_orientation_l2, weight=-4.0)
+
+
+@configclass
 class TerminationsCfg:
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
     bad_orientation = DoneTerm(
@@ -625,6 +645,20 @@ class WheelLegUnstructuredEnvCfg(WheelLegEnvCfg):
         self.viewer.eye = (5.0, 5.0, 2.6)
         self.terminations.base_height.params["minimum_height"] = -1.0
         self.terminations.bad_orientation.params["limit_angle"] = 1.40
+
+
+@configclass
+class WheelLegUnstructuredNoEnergyPenaltyEnvCfg(WheelLegUnstructuredEnvCfg):
+    rewards: NoEnergyPenaltyRewardsCfg = NoEnergyPenaltyRewardsCfg()
+
+
+@configclass
+class WheelLegUnstructuredHighPosturePenaltyEnvCfg(WheelLegUnstructuredEnvCfg):
+    rewards: HighPosturePenaltyRewardsCfg = HighPosturePenaltyRewardsCfg()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.terminations.bad_orientation.params["limit_angle"] = 0.9
 
 # ==============================================================================
 # 评估专用环境 (Evaluation Environments)

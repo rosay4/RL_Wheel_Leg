@@ -17,7 +17,7 @@ parser.add_argument(
     action="append",
     nargs=2,
     metavar=("MODEL_LABEL", "CSV_PATH"),
-    required=True,
+    required=False,
     help="由 eval_parameter_shift.py 导出的主 trial CSV，可重复填写多个模型。",
 )
 parser.add_argument(
@@ -43,6 +43,12 @@ parser.add_argument(
 )
 parser.add_argument("--output-dir", type=str, default=None, help="汇总 CSV 与图片的输出目录。")
 parser.add_argument("--title-prefix", type=str, default="域随机化消融实验", help="图标题前缀。")
+parser.add_argument(
+    "--phase-only",
+    action="store_true",
+    default=False,
+    help="仅绘制相位图，不生成柱状图，也不要求提供 --main-entry。",
+)
 args = parser.parse_args()
 
 
@@ -86,7 +92,21 @@ def _resolve_output_dir(first_csv: Path) -> Path:
     return out_dir
 
 
+def _resolve_phase_output_dir() -> Path:
+    if args.output_dir:
+        out_dir = Path(args.output_dir).expanduser().resolve()
+    else:
+        if not args.phase_entry:
+            raise ValueError("未提供 --phase-entry，无法确定输出目录。")
+        first_phase_csv = Path(args.phase_entry[0][1]).expanduser().resolve()
+        out_dir = first_phase_csv.parent / "plots"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return out_dir
+
+
 def _aggregate_main_csvs() -> tuple[pd.DataFrame, Path]:
+    if not args.main_entry:
+        raise ValueError("未提供 --main-entry，无法生成柱状图。")
     rows = []
     first_csv = None
     for model_label, csv_path_str in args.main_entry:
@@ -206,6 +226,12 @@ def _plot_phase_portrait(out_dir: Path):
 
 def main():
     _setup_chinese_font()
+    if args.phase_only:
+        out_dir = _resolve_phase_output_dir()
+        _plot_phase_portrait(out_dir)
+        print(f"[INFO] 相位图已导出到: {out_dir}")
+        return
+
     summary_df, first_csv = _aggregate_main_csvs()
     out_dir = _resolve_output_dir(first_csv)
 

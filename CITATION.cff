@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: "RL Wheel Leg"
+type: software
+abstract: "Isaac Lab reinforcement-learning simulation and control project for a wheel-leg robot."
+repository-code: "https://github.com/rosay4/RL_Wheel_Leg"
+license: Apache-2.0
+version: 0.1.0
+date-released: 2026-09-10
+authors:
+  - name: "RL Wheel Leg Project Contributors"

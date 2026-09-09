@@ -16,3 +16,9 @@ files, and internal Git diffs are intentionally omitted. The source archive was
 
 The exported policy files are the recommended artifacts for inference. The
 `.pt` checkpoint files are provided for resuming or inspecting training.
+
+## 中文说明
+
+这里保存从原始训练结果中筛选出的代表性模型，而不是全部训练过程。每个模型目录包含一个选定的 RSL-RL checkpoint、ONNX 策略、TorchScript 策略，以及训练时保存的环境和 agent 配置快照。
+
+模型来源、任务对应关系和待确认项见 `manifest.yaml`。其中任务映射不明确的模型会明确标记为 `null`，不会根据文件名擅自推断。

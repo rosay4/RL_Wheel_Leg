@@ -28,3 +28,9 @@ python scripts/rsl_rl/play.py --task=<TASK_ID> --checkpoint=<CHECKPOINT>
 
 The catalog is documentation only. The Isaac Lab registry and Python config
 classes remain the source of truth for execution.
+
+## 中文说明
+
+运行时配置仍由 `source/wheel_leg/` 中的 Python 配置类提供，本目录不复制第二套运行时配置。`task_catalog.yaml` 只是任务索引，记录任务 ID、环境配置类、PPO 配置类和实验用途。
+
+新增任务时，应同时更新 Gym 注册、Python 配置类和任务索引，并使用 `python scripts/list_envs.py` 检查任务是否能够被发现。

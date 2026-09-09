@@ -1,9 +1,6 @@
 # Curated checkpoint manifest.
 # Paths are relative to this directory.
 
-source_archive: models.zip
-source_archive_location: "毕业论文/models.zip"
-
 checkpoints:
   - name: flat_cmd_v1_1
     source_run: 2026-04-15_22-43-59_cmd_flat_v1.1

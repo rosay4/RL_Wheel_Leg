@@ -20,3 +20,9 @@ assumed duplicates.
 The plotting and evaluation scripts live under `scripts/rsl_rl/`. The files in
 this directory are recorded results, not the source of truth for rerunning an
 experiment.
+
+## 中文说明
+
+这里保存实验产生的 CSV 和结果图，不是重新运行实验所需的源代码。`raw/` 保存原始分析数据，`raw/new_experiment/` 保存后续实验批次，`plots/` 保存结果图及其 CSV sidecar。
+
+带有 `(1)` 或 `_copy` 的文件内容与同名文件不同，因此保留为独立实验版本。文件来源和数量统计见 `manifest.yaml`。

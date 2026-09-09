@@ -1,0 +1,617 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This URDF was automatically created by SolidWorks to URDF Exporter! Originally created by Stephen Brawner (brawner@gmail.com) 
+     Commit Version: 1.6.0-4-g7f85cfe  Build Version: 1.6.7995.38578
+     For more information, please see http://wiki.ros.org/sw_urdf_exporter -->
+<robot
+  name="wheel_leg_correct">
+  <link
+    name="base_link">
+    <inertial>
+      <origin
+        xyz="-1.5926152029222E-05 -0.0109088236768348 0.0307895147236118"
+        rpy="0 0 0" />
+      <mass
+        value="0.257107874090604" />
+      <inertia
+        ixx="0.00015330486719807"
+        ixy="-8.75737516363516E-09"
+        ixz="2.46536502904252E-08"
+        iyy="6.03822423741166E-05"
+        iyz="-8.01497858060152E-06"
+        izz="0.00016352659095363" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/base_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/base_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <link
+    name="thigh_front_L">
+    <inertial>
+      <origin
+        xyz="0.0357180653377639 0.0127711852777255 -0.00124102301683496"
+        rpy="0 0 0" />
+      <mass
+        value="0.00899415738745603" />
+      <inertia
+        ixx="6.02734707896142E-07"
+        ixy="-9.33899575867267E-07"
+        ixz="2.02407611479121E-09"
+        iyy="2.88071624732825E-06"
+        iyz="7.23760506581532E-10"
+        izz="3.35085357809018E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_front_L.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_front_L.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_front_L_joint"
+    type="revolute">
+    <origin
+      xyz="0.05745 -0.019622 0.010513"
+      rpy="-1.5708 0.07747 -1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="thigh_front_L" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="calf_front_L">
+    <inertial>
+      <origin
+        xyz="0.0509566286826386 0.00279531831166513 0.00720470856079711"
+        rpy="0 0 0" />
+      <mass
+        value="0.0100512879761871" />
+      <inertia
+        ixx="5.19370422559841E-07"
+        ixy="-4.92321911758408E-07"
+        ixz="-2.72961268668614E-08"
+        iyy="9.466920772695E-06"
+        iyz="-1.50008636018705E-09"
+        izz="9.95833150978184E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_front_L.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_front_L.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_front_L_joint"
+    type="revolute">
+    <origin
+      xyz="0.056497 0.020201 -0.00235"
+      rpy="0 0 2.4451" />
+    <parent
+      link="thigh_front_L" />
+    <child
+      link="calf_front_L" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="wheel_L">
+    <inertial>
+      <origin
+        xyz="-1.58375855170978E-05 1.00356590331113E-05 0.00665255193843409"
+        rpy="0 0 0" />
+      <mass
+        value="0.069669449025636" />
+      <inertia
+        ixx="2.32496372096732E-05"
+        ixy="5.36179799449269E-08"
+        ixz="-1.21843905360839E-08"
+        iyy="2.33006649143816E-05"
+        iyz="7.70585217264112E-09"
+        izz="4.15679675143328E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/wheel_L.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/wheel_L.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="ankle_L_joint"
+    type="continuous">
+    <origin
+      xyz="0.090115 0.0049435 0.016"
+      rpy="0 0 0.61898" />
+    <parent
+      link="calf_front_L" />
+    <child
+      link="wheel_L" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="thigh_rear_L">
+    <inertial>
+      <origin
+        xyz="0.034327 -0.016142 -0.001241"
+        rpy="0 0 0" />
+      <mass
+        value="0.0089942" />
+      <inertia
+        ixx="8.0227E-07"
+        ixy="1.1344E-06"
+        ixz="1.9452E-09"
+        iyy="2.6812E-06"
+        iyz="-9.1478E-10"
+        izz="3.3509E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_rear_L.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_rear_L.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_rear_L_joint"
+    type="revolute">
+    <origin
+      xyz="0.0534500000000013 0.0177650586418615 0.0134151105643477"
+      rpy="1.5707963267949 -0.0774695596885131 1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="thigh_rear_L" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="calf_rear_L">
+    <inertial>
+      <origin
+        xyz="0.0531526881085074 -0.0029158814184815 0.0090850828482823"
+        rpy="0 0 0" />
+      <mass
+        value="0.0109305034895619" />
+      <inertia
+        ixx="5.72090057455469E-07"
+        ixy="5.35787699997089E-07"
+        ixz="8.85252179635803E-09"
+        iyy="1.03095914276291E-05"
+        iyz="-4.84487375220839E-10"
+        izz="1.08473001026206E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_rear_L.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_rear_L.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_rear_L_joint"
+    type="revolute">
+    <origin
+      xyz="0.054296 -0.025533 -0.00435"
+      rpy="0 0 -2.517" />
+    <parent
+      link="thigh_rear_L" />
+    <child
+      link="calf_rear_L" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="thigh_front_R">
+    <inertial>
+      <origin
+        xyz="0.0357180653790256 -0.0127711852897369 -0.00124102301683492"
+        rpy="0 0 0" />
+      <mass
+        value="0.00899415738745604" />
+      <inertia
+        ixx="6.02734707913697E-07"
+        ixy="9.338995758932E-07"
+        ixz="2.02407840959217E-09"
+        iyy="2.8807162473107E-06"
+        iyz="-7.23761169352074E-10"
+        izz="3.35085357809019E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_front_R.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_front_R.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_front_R_joint"
+    type="revolute">
+    <origin
+      xyz="-0.05745 -0.019622 0.010513"
+      rpy="1.5708 0.07747 -1.5708" />
+    <parent
+      link="base_link" />
+    <child
+      link="thigh_front_R" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="calf_front_R">
+    <inertial>
+      <origin
+        xyz="0.050957 -0.0027955 0.0092047"
+        rpy="0 0 0" />
+      <mass
+        value="0.010051" />
+      <inertia
+        ixx="5.1937E-07"
+        ixy="4.9232E-07"
+        ixz="-2.7291E-08"
+        iyy="9.4669E-06"
+        iyz="1.4974E-09"
+        izz="9.9583E-06" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_front_R.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.75294 0.75294 0.75294 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_front_R.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_front_R_joint"
+    type="revolute">
+    <origin
+      xyz="0.056497 -0.020201 -0.00435"
+      rpy="0 0 -2.4451" />
+    <parent
+      link="thigh_front_R" />
+    <child
+      link="calf_front_R" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="wheel_R">
+    <inertial>
+      <origin
+        xyz="-1.58098813599523E-05 -1.0028024284979E-05 0.00665255186634812"
+        rpy="0 0 0" />
+      <mass
+        value="0.069669449025636" />
+      <inertia
+        ixx="2.32496896323803E-05"
+        ixy="-5.37207902581839E-08"
+        ixz="-1.21969212006706E-08"
+        iyy="2.33006124916745E-05"
+        iyz="-7.70921853874275E-09"
+        izz="4.15679675143329E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/wheel_R.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/wheel_R.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="ankle_R_joint"
+    type="continuous">
+    <origin
+      xyz="0.090115 -0.0049435 0.018"
+      rpy="0 0 -0.61898" />
+    <parent
+      link="calf_front_R" />
+    <child
+      link="wheel_R" />
+    <axis
+      xyz="0 0 1" />
+  </joint>
+  <link
+    name="thigh_rear_R">
+    <inertial>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <mass
+        value="0" />
+      <inertia
+        ixx="0"
+        ixy="0"
+        ixz="0"
+        iyy="0"
+        iyz="0"
+        izz="0" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_rear_R.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="1 1 1 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/thigh_rear_R.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="hip_rear_R_joint"
+    type="revolute">
+    <origin
+      xyz="-0.0534499999999989 0.01776505864177 0.0134151105643781"
+      rpy="-1.5707963267949 -0.0774695596885131 1.5707963267949" />
+    <parent
+      link="base_link" />
+    <child
+      link="thigh_rear_R" />
+    <axis
+      xyz="0 0 1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+  <link
+    name="calf_rear_R">
+    <inertial>
+      <origin
+        xyz="0.0531524108033453 0.00291576900512113 0.00908508284828183"
+        rpy="0 0 0" />
+      <mass
+        value="0.0109305034895619" />
+      <inertia
+        ixx="5.72089893492899E-07"
+        ixy="-5.3578753100627E-07"
+        ixz="8.84785727984813E-09"
+        iyy="1.03095915915917E-05"
+        iyz="4.82596485318305E-10"
+        izz="1.08473001026206E-05" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_rear_R.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="package://wheel_leg_correct/meshes/calf_rear_R.STL" />
+      </geometry>
+    </collision>
+  </link>
+  <joint
+    name="knee_rear_R_joint"
+    type="revolute">
+    <origin
+      xyz="0.054296 0.025533 -0.00435"
+      rpy="0 0 2.517" />
+    <parent
+      link="thigh_rear_R" />
+    <child
+      link="calf_rear_R" />
+    <axis
+      xyz="0 0 -1" />
+    <limit
+      lower="-3.14"
+      upper="3.14"
+      effort="20"
+      velocity="20" />
+  </joint>
+</robot>

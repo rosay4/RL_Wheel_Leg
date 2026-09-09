@@ -13,6 +13,11 @@
 **/*.usda
 **/*.usdc
 **/*.usdz
+!assets/
+!assets/**/*.usd
+!assets/**/*.usda
+!assets/**/*.usdc
+!assets/**/*.usdz
 
 # Python
 .DS_Store

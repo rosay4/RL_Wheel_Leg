@@ -1,0 +1,2 @@
+command_vy,command_wz,num_trials,success_rate,mean_distance_y_w,mean_terminated_step,mean_final_pitch_deg
+1.0,0.0,20.0,0.0,-0.0004631996154785156,399.0,-0.2674311088398099

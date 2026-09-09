@@ -1,0 +1,2 @@
+model_name,command_vy,command_wz,recorded_steps,mean_abs_torque,max_abs_torque,torque_std,torque_diff_rms,mean_sign_changes_per_joint,terminated,mean_abs_torque_ankle_L_joint,torque_diff_rms_ankle_L_joint,sign_changes_ankle_L_joint,mean_abs_torque_ankle_R_joint,torque_diff_rms_ankle_R_joint,sign_changes_ankle_R_joint
+Ours,-1.0,0.0,380.0,5.330776214599609,11.446022987365723,5.588420867919922,2.396505832672119,0.0,1.0,5.1148362159729,1.809367060661316,0.0,5.54671573638916,2.8657758235931396,0.0

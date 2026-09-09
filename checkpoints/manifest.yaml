@@ -1,0 +1,69 @@
+# Curated checkpoint manifest.
+# Paths are relative to this directory.
+
+checkpoints:
+  - name: flat_cmd_v1_1
+    source_run: 2026-04-15_22-43-59_cmd_flat_v1.1
+    task_id: Template-Wheel-Leg-v0
+    selected_checkpoint: model_999.pt
+    files:
+      checkpoint: flat_cmd_v1_1/model_999.pt
+      onnx_policy: flat_cmd_v1_1/exported/policy.onnx
+      torchscript_policy: flat_cmd_v1_1/exported/policy.pt
+      environment_config: flat_cmd_v1_1/params/env.yaml
+      agent_config: flat_cmd_v1_1/params/agent.yaml
+
+  - name: robust_v2_finetune
+    source_run: 2026-04-16_23-53-58_robust_v2_finetune
+    task_id: null
+    selected_checkpoint: model_1298.pt
+    files:
+      checkpoint: robust_v2_finetune/model_1298.pt
+      onnx_policy: robust_v2_finetune/exported/policy.onnx
+      torchscript_policy: robust_v2_finetune/exported/policy.pt
+      environment_config: robust_v2_finetune/params/env.yaml
+      agent_config: robust_v2_finetune/params/agent.yaml
+
+  - name: rough_light_v1_1
+    source_run: 2026-04-17_22-44-03_rough_light_v1.1
+    task_id: Template-Wheel-Leg-Rough-v0
+    selected_checkpoint: model_3000.pt
+    files:
+      checkpoint: rough_light_v1_1/model_3000.pt
+      onnx_policy: rough_light_v1_1/exported/policy.onnx
+      torchscript_policy: rough_light_v1_1/exported/policy.pt
+      environment_config: rough_light_v1_1/params/env.yaml
+      agent_config: rough_light_v1_1/params/agent.yaml
+
+  - name: slope_v1
+    source_run: 2026-04-18_14-28-12_slope_v1
+    task_id: Template-Wheel-Leg-Slope-v0
+    selected_checkpoint: model_3300.pt
+    files:
+      checkpoint: slope_v1/model_3300.pt
+      onnx_policy: slope_v1/exported/policy.onnx
+      torchscript_policy: slope_v1/exported/policy.pt
+      environment_config: slope_v1/params/env.yaml
+      agent_config: slope_v1/params/agent.yaml
+
+  - name: mixed_v1
+    source_run: 2026-04-18_15-19-50_mixed_v1
+    task_id: Template-Wheel-Leg-Mixed-v0
+    selected_checkpoint: model_3800.pt
+    files:
+      checkpoint: mixed_v1/model_3800.pt
+      onnx_policy: mixed_v1/exported/policy.onnx
+      torchscript_policy: mixed_v1/exported/policy.pt
+      environment_config: mixed_v1/params/env.yaml
+      agent_config: mixed_v1/params/agent.yaml
+
+  - name: unstructured_v1
+    source_run: 2026-04-18_21-16-24_unstructured_v1
+    task_id: Template-Wheel-Leg-Unstructured-v0
+    selected_checkpoint: model_4300.pt
+    files:
+      checkpoint: unstructured_v1/model_4300.pt
+      onnx_policy: unstructured_v1/exported/policy.onnx
+      torchscript_policy: unstructured_v1/exported/policy.pt
+      environment_config: unstructured_v1/params/env.yaml
+      agent_config: unstructured_v1/params/agent.yaml

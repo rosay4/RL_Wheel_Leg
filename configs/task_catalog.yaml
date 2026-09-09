@@ -1,0 +1,63 @@
+# Human-readable index of the Gym environments registered by this project.
+# Runtime configuration remains in source/wheel_leg/.
+
+tasks:
+  - id: Template-Wheel-Leg-v0
+    purpose: flat-ground training
+    environment_config: WheelLegEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Rough-v0
+    purpose: rough-terrain training
+    environment_config: WheelLegRoughEnvCfg
+    agent_config: RoughPPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Slope-v0
+    purpose: slope training or evaluation
+    environment_config: WheelLegSlopeEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Mixed-v0
+    purpose: mixed-terrain training or evaluation
+    environment_config: WheelLegMixedEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Unstructured-v0
+    purpose: unstructured-terrain training
+    environment_config: WheelLegUnstructuredEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Unstructured-NoEnergyPenalty-v0
+    purpose: reward ablation without energy penalty
+    environment_config: WheelLegUnstructuredNoEnergyPenaltyEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Unstructured-HighPosturePenalty-v0
+    purpose: reward ablation with high posture penalty
+    environment_config: WheelLegUnstructuredHighPosturePenaltyEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-NoDr-v0
+    purpose: domain-randomization ablation without domain randomization
+    environment_config: WheelLegNoDrEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Eval-Stairs-v0
+    purpose: stairs evaluation
+    environment_config: WheelLegEvalStairsEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command
+
+  - id: Template-Wheel-Leg-Eval-Rough-v0
+    purpose: rough-terrain evaluation
+    environment_config: WheelLegEvalRoughEnvCfg
+    agent_config: PPORunnerCfg
+    experiment_name: wheel_leg_command

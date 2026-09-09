@@ -1,0 +1,2 @@
+model_name,shift_set,trial_idx,command_vy,command_wz,survived,survival_steps,survival_time_s,termination_reason,rmse_vy,rmse_wz,mean_abs_pitch_deg,max_abs_pitch_deg,mean_abs_roll_deg,max_abs_roll_deg
+NoDR1298,low_friction,0.0,-0.6,0.0,1.0,200.0,4.0,time_window_complete,0.0825067088007927,0.414211630821228,5.355592727661133,6.401312828063965,4.733691215515137,6.4941840171813965

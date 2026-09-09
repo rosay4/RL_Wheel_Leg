@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 import math
+from pathlib import Path
 
 import isaaclab.envs.mdp as mdp
 import isaaclab.sim as sim_utils
@@ -31,6 +32,16 @@ from isaaclab.terrains.height_field.hf_terrains_cfg import HfRandomUniformTerrai
 ROBOT_CFG = SceneEntityCfg("robot")
 WHEEL_CFG = SceneEntityCfg("robot", joint_names=[".*ankle.*"])
 HIP_CFG = SceneEntityCfg("robot", joint_names=[".*hip.*"])
+WHEEL_LEG_USD_PATH = (
+    Path(__file__).resolve().parents[6]
+    / "assets"
+    / "wheel_leg"
+    / "usd"
+    / "wheel_leg_correct"
+    / "urdf"
+    / "model"
+    / "model.usd"
+)
 
 
 def get_wheel_leg_robot_cfg() -> ArticulationCfg:
@@ -58,7 +69,7 @@ def get_wheel_leg_robot_cfg() -> ArticulationCfg:
 
     return ArticulationCfg(
         spawn=sim_utils.UsdFileCfg(
-            usd_path="/home/gm_4_rosay/wheel_leg_correct/urdf/model/model.usd",
+            usd_path=str(WHEEL_LEG_USD_PATH),
             activate_contact_sensors=True,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 disable_gravity=False,

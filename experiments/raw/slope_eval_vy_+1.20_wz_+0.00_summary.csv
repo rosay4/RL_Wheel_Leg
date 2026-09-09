@@ -1,0 +1,2 @@
+command_vy,command_wz,duration_s,distance_y_w,mean_pitch_deg,max_abs_pitch_deg,mean_com_height_w,min_com_height_w,terminated
+1.2,0.0,8.46,0.24280643463134766,-0.6002239166398726,7.696775436401367,-0.19293090599184892,-0.22199460864067078,1.0

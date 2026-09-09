@@ -1,0 +1,2 @@
+model_name,shift_set,trial_idx,command_vy,command_wz,survived,survival_steps,survival_time_s,termination_reason,rmse_vy,rmse_wz,mean_abs_pitch_deg,max_abs_pitch_deg,mean_abs_roll_deg,max_abs_roll_deg
+CMDFLAT,low_friction,0.0,-0.6,0.0,1.0,200.0,4.0,time_window_complete,0.14254707098007202,0.4194560647010803,0.6079262495040894,2.0679430961608887,5.265897750854492,7.272402286529541

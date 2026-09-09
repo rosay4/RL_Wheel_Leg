@@ -1,0 +1,21 @@
+# Inventory of the experiment snapshot in this directory.
+
+source_directory: "毕业论文/analysis"
+files: 67
+csv_files: 46
+png_files: 21
+total_bytes: 14378005
+
+locations:
+  - path: raw
+    source: analysis/*.csv
+    format: csv
+    description: Original analysis-root evaluation and parameter-shift outputs.
+  - path: raw/new_experiment
+    source: analysis/新实验/*.csv
+    format: csv
+    description: Later curriculum, torque-ablation, and tracking result outputs.
+  - path: plots
+    source: analysis/plots/**
+    format: csv-or-png
+    description: Generated figures and their stored CSV sidecars.

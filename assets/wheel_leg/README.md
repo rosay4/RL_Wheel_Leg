@@ -11,4 +11,4 @@ The USD asset is loaded by `source/wheel_leg/wheel_leg/tasks/manager_based/wheel
 
 这里保存轮腿机器人仿真所需的 URDF、STL 和 USD 资产。`urdf/wheel_leg_correct/` 是修正版 SW2URDF 导出结果，`usd/wheel_leg_correct/` 是 Isaac Lab 使用的 USD 及其依赖文件。
 
-仿真配置会从仓库路径加载 USD，不依赖个人电脑、云桌面或其他本地绝对路径。使用这些资产时请保持目录结构不变。
+仿真配置会从仓库路径加载 USD。使用这些资产时请保持目录结构不变。

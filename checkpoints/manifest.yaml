@@ -17,7 +17,6 @@ checkpoints:
     source_run: 2026-04-16_23-53-58_robust_v2_finetune
     task_id: null
     selected_checkpoint: model_1298.pt
-    notes: Task mapping requires confirmation from the original experiment notes.
     files:
       checkpoint: robust_v2_finetune/model_1298.pt
       onnx_policy: robust_v2_finetune/exported/policy.onnx

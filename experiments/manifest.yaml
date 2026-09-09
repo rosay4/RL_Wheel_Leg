@@ -9,9 +9,9 @@ locations:
   - path: raw
     source: analysis/*.csv
     format: csv
-    description: Original analysis-root evaluation and parameter-shift outputs.
+    description: Evaluation and parameter-shift outputs.
   - path: raw/new_experiment
-    source: analysis/新实验/*.csv
+    source: later experiment batch/*.csv
     format: csv
     description: Later curriculum, torque-ablation, and tracking result outputs.
   - path: plots
